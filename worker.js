@@ -7,7 +7,7 @@ export default {
       return new Response(
         JSON.stringify({
           status: "ok",
-          project: "AURIX"
+          project: "PERSEPOLIS"
         }),
         {
           headers: {
@@ -18,34 +18,21 @@ export default {
     }
 
     // Setup Telegram webhook
-    if (url.pathname === "/setup-webhook") {if (url.pathname === "/setup-webhook") {
-  const webhookUrl = "https://aurix.ahoon201.workers.dev/telegram";
-
-  const response = await fetch(
-    `https://api.telegram.org/bot${env.BOT_TOKEN}/setWebhook`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        url: webhookUrl
-      })
-    }
-  );
-
-  const result = await response.text();
-
-  return new Response(result, {
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
-}
-      const webhookUrl = "https://aurix.ahoon201.workers.dev/telegram";
+    if (url.pathname === "/setup-webhook") {
+      const webhookUrl =
+        "https://persepolis.ahoon201.workers.dev/telegram";
 
       const response = await fetch(
-        `https://api.telegram.org/bot${env.BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`
+        `https://api.telegram.org/bot${env.BOT_TOKEN}/setWebhook`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            url: webhookUrl
+          })
+        }
       );
 
       const result = await response.text();
@@ -76,7 +63,8 @@ export default {
                 },
                 body: JSON.stringify({
                   chat_id: chatId,
-                  text: "🚀 به AURIX خوش آمدی!\n\n⛏️ ماینینگ شما آماده است."
+                  text:
+                    "🏛️ به PERSEPOLIS خوش آمدی!\n\n⛏️ ماینینگ شما آماده است."
                 })
               }
             );
@@ -91,7 +79,7 @@ export default {
       }
     }
 
-    // Serve AURIX Mini App
+    // Serve PERSEPOLIS Mini App
     return env.ASSETS.fetch(request);
   }
 };
