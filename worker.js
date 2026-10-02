@@ -2,7 +2,6 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // تست Backend
     if (url.pathname === "/health") {
       return new Response(
         JSON.stringify({
@@ -17,7 +16,6 @@ export default {
       );
     }
 
-    // Telegram webhook
     if (url.pathname === "/telegram" && request.method === "POST") {
       try {
         const update = await request.json();
