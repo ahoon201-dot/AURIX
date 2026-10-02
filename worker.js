@@ -18,7 +18,30 @@ export default {
     }
 
     // Setup Telegram webhook
-    if (url.pathname === "/setup-webhook") {
+    if (url.pathname === "/setup-webhook") {if (url.pathname === "/setup-webhook") {
+  const webhookUrl = "https://aurix.ahoon201.workers.dev/telegram";
+
+  const response = await fetch(
+    `https://api.telegram.org/bot${env.BOT_TOKEN}/setWebhook`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        url: webhookUrl
+      })
+    }
+  );
+
+  const result = await response.text();
+
+  return new Response(result, {
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+}
       const webhookUrl = "https://aurix.ahoon201.workers.dev/telegram";
 
       const response = await fetch(
