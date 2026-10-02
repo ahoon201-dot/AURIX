@@ -1,1 +1,81 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AURIX Mining</title><link rel="stylesheet" href="style.css"></head><body><main class="app"><header><div class="brand"><span class="coin">A</span><div><b>AURIX</b><small>MINING NETWORK</small></div></div><div class="level">LVL <b id="level">1</b></div></header><section class="balance"><small>BALANCE</small><h1><span id="balance">0.00</span> <em>AUX</em></h1><div class="rate">⚡ <span id="rate">1.00</span> AUX / hour</div></section><section class="mine-card"><div class="coin-big">A</div><p>MINING ACTIVE</p><div class="progress"><i id="progress"></i></div><button id="claim">CLAIM AUX</button><small id="timer">Next claim: 60s</small></section><section class="grid"><button class="tile" id="upgrade"><strong>⛏️ Miner</strong><span>Upgrade</span><b id="price">100 AUX</b></button><button class="tile"><strong>🎁 Tasks</strong><span>Daily rewards</span></button><button class="tile"><strong>👥 Friends</strong><span>Invite & earn</span></button><button class="tile"><strong>👛 Wallet</strong><span>Coming soon</span></button></section><nav><a class="active">⛏️<span>Mine</span></a><a>⚡<span>Miners</span></a><a>🎁<span>Tasks</span></a><a>👥<span>Friends</span></a><a>👤<span>Profile</span></a></nav></main><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PERSEPOLIS Mining</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <div class="logo">PERSEPOLIS</div>
+      <div class="sub">MINING NETWORK</div>
+    </div>
+    <div class="wallet" id="wallet">WALLET</div>
+  </header>
+
+  <main>
+    <section class="mine-card">
+      <div class="ready"><i></i> READY</div>
+      <div class="assets">ASSETS</div>
+      <div class="balance"><span id="balance">0.0000</span> <b>PERS</b></div>
+      <div class="pill">HOLDING WALLET: <strong id="holding">0.0000 PERS</strong></div>
+      <div class="pill">POOL WALLET: <strong id="pool">0.0000 PERS</strong></div>
+      <div class="earned">+<span id="earned">0.0000</span></div>
+      <div class="coin"><span>𓂀</span></div>
+      <div class="speed">⚡ <strong id="speed">1.00</strong> PERS / HOUR</div>
+      <button class="claim" id="claim">CLAIM</button>
+    </section>
+
+    <section class="buy-card">
+      <div><strong>MORE MINING POWER?</strong><small>Buy PERS to unlock higher Miner levels.</small></div>
+      <button id="buy">🪙 BUY PERS</button>
+    </section>
+
+    <section class="panel active" id="mine">
+      <h2>MINING</h2>
+      <div class="stats">
+        <div><small>LEVEL</small><b id="level">1</b></div>
+        <div><small>SPEED</small><b id="speed2">1.00 PERS/h</b></div>
+        <div><small>NEXT UPGRADE</small><b id="next">100 PERS</b></div>
+        <div><small>STATUS</small><b>ACTIVE</b></div>
+      </div>
+    </section>
+
+    <section class="panel" id="miners">
+      <h2>MINERS</h2>
+      <div class="miner-grid" id="minerGrid"></div>
+    </section>
+
+    <section class="panel" id="tasks">
+      <h2>TASKS</h2>
+      <div class="task">🎁 Daily check-in <button>+10 PERS</button></div>
+      <div class="task">📣 Follow community <button>+25 PERS</button></div>
+      <div class="task">👥 Invite a friend <button>+50 PERS</button></div>
+    </section>
+
+    <section class="panel" id="friends">
+      <h2>FRIENDS</h2>
+      <div class="box"><b>Invite friends</b><p>Share your referral link and grow your mining network.</p><button id="share">INVITE FRIENDS</button></div>
+    </section>
+
+    <section class="panel" id="profile">
+      <h2>PROFILE</h2>
+      <div class="box profile"><div class="avatar">P</div><div><b id="name">Miner</b><small id="uid">Telegram user</small></div></div>
+    </section>
+  </main>
+
+  <nav>
+    <button class="nav active" data-tab="mine">⛏️<span>Mine</span></button>
+    <button class="nav" data-tab="miners">⚡<span>Miners</span></button>
+    <button class="nav" data-tab="tasks">🎁<span>Tasks</span></button>
+    <button class="nav" data-tab="friends">👥<span>Friends</span></button>
+    <button class="nav" data-tab="profile">👤<span>Profile</span></button>
+  </nav>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
