@@ -2,6 +2,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // Health check
     if (url.pathname === "/health") {
       return new Response(
         JSON.stringify({
@@ -16,6 +17,24 @@ export default {
       );
     }
 
+    // Setup Telegram webhook
+    if (url.pathname === "/setup-webhook") {
+      const webhookUrl = "https://aurix.ahoon201.workers.dev/telegram";
+
+      const response = await fetch(
+        `https://api.telegram.org/bot${env.BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`
+      );
+
+      const result = await response.text();
+
+      return new Response(result, {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+    // Telegram webhook
     if (url.pathname === "/telegram" && request.method === "POST") {
       try {
         const update = await request.json();
@@ -43,27 +62,13 @@ export default {
 
         return new Response("OK");
       } catch (error) {
-        return new Response("Webhook error", { status: 500 });
+        return new Response("Webhook error", {
+          status: 500
+        });
       }
     }
 
-    return new Response("AURIX Backend is running 🚀");
+    // Serve AURIX Mini App
+    return env.ASSETS.fetch(request);
   }
 };
-if (url.pathname === "/setup-webhook") {
-  const webhookUrl = "https://aurix.ahoon201.workers.dev/telegram";
-
-  const response = await fetch(
-    `https://api.telegram.org/bot${env.BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`
-  );
-
-  const result = await response.text();
-
-  return new Response(result, {
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
-}
-
-return new Response("AURIX Backend is running 🚀");
