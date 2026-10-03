@@ -5,7 +5,7 @@ body{min-height:100vh;background:#050302 url("PERS_logo_final.png") center 150px
 .topbar{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 17px;background:rgba(7,6,5,.9);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,209,67,.18);position:relative;z-index:5}
 .brand b{display:block;font-size:18px;letter-spacing:1.8px}.brand span{font-size:8px;letter-spacing:2.5px;color:#c7a94d}
 .topbar #ton-connect{max-width:165px}
-.hero{position:relative;min-height:760px;padding:18px 18px 24px;overflow:hidden;text-align:center;background:linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.08) 45%,rgba(0,0,0,.72))}
+.hero{position:relative;min-height:760px;padding:18px 18px 24px;overflow:hidden;text-align:center;background:linear-gradient(180deg,rgba(0,0,0,.42),rgba(0,0,0,.18) 45%,rgba(0,0,0,.78)),url("persepolis-bg.png") center/cover no-repeat}
 .profile-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .profile-mini{display:flex;align-items:center;text-align:left;gap:9px}
 .mini-avatar{width:58px;height:58px;border-radius:50%;padding:4px;background:linear-gradient(145deg,#ffe08b,#a76c11);box-shadow:0 0 18px rgba(255,189,43,.38)}
