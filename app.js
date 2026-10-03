@@ -92,11 +92,23 @@ document.querySelectorAll("[data-reward]").forEach(btn=>{
   };
 });
 
-document.querySelector("#share2").onclick=()=>{
-  const url = `https://t.me/Pirouzi6_bot`;
-  if(tg?.openTelegramLink) tg.openTelegramLink(url);
-  else navigator.clipboard?.writeText(url);
-};
+function inviteFriends(){
+  const userId = tg?.initDataUnsafe?.user?.id || "miner";
+
+  const inviteUrl =
+    `https://t.me/Pirouzi6_bot?startapp=ref_${userId}`;
+
+  const shareUrl =
+    `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent("🚀 Join PERSEPOLIS Mining")}`;
+
+  if(tg?.openTelegramLink){
+    tg.openTelegramLink(shareUrl);
+  }else{
+    window.open(shareUrl,"_blank");
+  }
+}
+
+document.querySelector("#share2").onclick = inviteFriends;
 
 async function initTon(){
   if(!window.TON_CONNECT_UI) return;
