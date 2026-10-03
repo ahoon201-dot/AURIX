@@ -3,42 +3,60 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>PERSEPOLIS Mining</title>
+<meta name="theme-color" content="#080604">
+<title>PERSEPOLIS</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="app">
-  <header class="top">
-    <div>
-      <div class="logo">PERSEPOLIS</div>
-      <div class="sub">MINING NETWORK</div>
-    </div>
-    <div class="wallet" id="wallet">WALLET</div>
+  <header class="topbar">
+    <div class="brand"><b>PERSEPOLIS</b><span>MINING NETWORK</span></div>
+    <div id="ton-connect"></div>
   </header>
 
   <main>
-    <section class="mine-card">
-      <div class="ready"><i></i> READY</div>
-      <div class="assets">ASSETS</div>
+    <section class="hero">
+      <div class="profile-row">
+        <div class="profile-mini">
+          <div class="mini-avatar"><img src="assets/pers-logo.png" alt="PERS"></div>
+          <div>
+            <div class="name" id="name">Miner <span>✓</span></div>
+            <div class="badges"><b>LVL <i id="level">1</i></b><strong><em></em> READY</strong></div>
+            <div class="level-up"><span id="nextCost">100</span> PERS left to LVL UP</div>
+          </div>
+        </div>
+        <div class="wallet-chip" id="walletAddress">CONNECT WALLET</div>
+      </div>
+
+      <div class="assets-title">ASSETS</div>
       <div class="balance"><span id="balance">0.0000</span> <b>PERS</b></div>
-      <div class="pill">HOLDING WALLET: <strong id="holding">0.0000 PERS</strong></div>
-      <div class="pill">POOL WALLET: <strong id="pool">0.0000 PERS</strong></div>
-      <div class="earned">+<span id="earned">0.0000</span></div>
-      <div class="coin"><span>𓂀</span></div>
-      <div class="speed">⚡ <strong id="speed">1.00</strong> PERS / HOUR</div>
+      <div class="wallet-pills">
+        <div class="wallet-pill">HOLDING WALLET: <b id="holding">0.0000 PERS</b></div>
+        <div class="wallet-pill">POOL WALLET: <b id="pool">0.0000 PERS</b></div>
+      </div>
+
+      <div class="earned"><span>+</span><strong id="earned">0.000</strong></div>
+
+      <button class="share-btn" id="share" aria-label="Share">↗</button>
+      <button class="side-btn gift" data-tab="tasks" aria-label="Tasks">🎁</button>
+      <button class="side-btn help" aria-label="Help">?</button>
+
+      <div class="coin-wrap">
+        <div class="coin">
+          <div class="coin-inner"><img src="assets/pers-logo.png" alt="PERSEPOLIS PERS"><span>PERS</span></div>
+        </div>
+      </div>
+
+      <div class="speed-line">⚡ <b id="speed">1.00</b> PERS / HOUR</div>
       <button class="claim" id="claim">CLAIM</button>
     </section>
 
-    <section class="buy-card">
-      <div><strong>MORE MINING POWER?</strong><small>Buy PERS to unlock higher Miner levels.</small></div>
-      <button id="buy">🪙 BUY PERS</button>
-    </section>
-
-    <section class="panel active" id="mine">
+    <section class="panel" id="mine">
       <h2>MINING</h2>
       <div class="stats">
-        <div><small>LEVEL</small><b id="level">1</b></div>
+        <div><small>LEVEL</small><b id="level2">1</b></div>
         <div><small>SPEED</small><b id="speed2">1.00 PERS/h</b></div>
         <div><small>NEXT UPGRADE</small><b id="next">100 PERS</b></div>
         <div><small>STATUS</small><b>ACTIVE</b></div>
@@ -47,6 +65,7 @@
 
     <section class="panel" id="miners">
       <h2>MINERS</h2>
+      <div class="buy-note"><b>MORE MINING POWER?</b><span>Use your PERS balance to unlock higher levels.</span></div>
       <div class="miner-grid" id="minerGrid"></div>
     </section>
 
@@ -59,21 +78,22 @@
 
     <section class="panel" id="friends">
       <h2>FRIENDS</h2>
-      <div class="box"><b>Invite friends</b><p>Share your referral link and grow your mining network.</p><button id="share">INVITE FRIENDS</button></div>
+      <div class="box"><b>Invite friends</b><p>Share your referral link and grow your mining network.</p><button id="share2">INVITE FRIENDS</button></div>
     </section>
 
     <section class="panel" id="profile">
       <h2>PROFILE</h2>
-      <div class="box profile"><div class="avatar">P</div><div><b id="name">Miner</b><small id="uid">Telegram user</small></div></div>
+      <div class="box profile"><div class="avatar">P</div><div><b id="name2">Miner</b><small id="uid">Telegram user</small></div></div>
+      <div class="box contract"><small>PERS JETTON MASTER</small><code>EQBxwHlh-mqsszryIRQeFpvaG91EqS3HWtiQo4h2-UzYlBAX</code></div>
     </section>
   </main>
 
   <nav>
-    <button class="nav active" data-tab="mine">⛏️<span>Mine</span></button>
-    <button class="nav" data-tab="miners">⚡<span>Miners</span></button>
-    <button class="nav" data-tab="tasks">🎁<span>Tasks</span></button>
-    <button class="nav" data-tab="friends">👥<span>Friends</span></button>
-    <button class="nav" data-tab="profile">👤<span>Profile</span></button>
+    <button class="nav active" data-tab="mine"><span>⛏</span><b>Mine</b></button>
+    <button class="nav" data-tab="tasks"><span>📝</span><b>Tasks</b></button>
+    <button class="nav" data-tab="miners"><span>⚡</span><b>Miners</b></button>
+    <button class="nav" data-tab="friends"><span>👥</span><b>Friends</b></button>
+    <button class="nav" data-tab="profile"><span>👤</span><b>Profile</b></button>
   </nav>
 </div>
 <script src="app.js"></script>
