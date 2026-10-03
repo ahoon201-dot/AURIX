@@ -64,7 +64,19 @@ export default {
                 body: JSON.stringify({
                   chat_id: chatId,
                   text:
-                    "🏛️ به PERSEPOLIS خوش آمدی!\n\n⛏️ ماینینگ شما آماده است."
+                    "🏛️ به PERSEPOLIS خوش آمدی!\n\n⛏️ برای شروع ماینینگ روی دکمه زیر بزن:",
+                  reply_markup: {
+                    inline_keyboard: [
+                      [
+                        {
+                          text: "🚀 Start PERSEPOLIS Mining",
+                          web_app: {
+                            url: "https://persepolis.ahoon201.workers.dev/"
+                          }
+                        }
+                      ]
+                    ]
+                  }
                 })
               }
             );
@@ -80,6 +92,12 @@ export default {
     }
 
     // Serve PERSEPOLIS Mini App
-    return env.ASSETS.fetch(request);
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(request);
+    }
+
+    return new Response("Not found", {
+      status: 404
+    });
   }
 };
