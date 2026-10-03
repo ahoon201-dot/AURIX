@@ -17,10 +17,10 @@
   </header>
 
   <main>
-    <section class="hero">
+    <section class="hero" id="mine">
       <div class="profile-row">
         <div class="profile-mini">
-          <div class="mini-avatar"><img src="assets/pers-logo.png" alt="PERS"></div>
+          <div class="mini-avatar"><img src="PERS_logo_final.png" alt="PERS"></div>
           <div>
             <div class="name" id="name">Miner <span>✓</span></div>
             <div class="badges"><b>LVL <i id="level">1</i></b><strong><em></em> READY</strong></div>
@@ -30,22 +30,17 @@
         <div class="wallet-chip" id="walletAddress">CONNECT WALLET</div>
       </div>
 
-      <div class="assets-title">ASSETS</div>
-      <div class="balance"><span id="balance">0.0000</span> <b>PERS</b></div>
-      <div class="wallet-pills">
-        <div class="wallet-pill">HOLDING WALLET: <b id="holding">0.0000 PERS</b></div>
-        <div class="wallet-pill">POOL WALLET: <b id="pool">0.0000 PERS</b></div>
-      </div>
+      <div class="saved-title">SAVED TOKENS</div>
+      <div class="saved-balance"><span id="saved">0.0000</span> <b>PERS</b></div>
 
-      <div class="earned"><span>+</span><strong id="earned">0.000</strong></div>
-
-      <button class="share-btn" id="share" aria-label="Share">↗</button>
-      <button class="side-btn gift" data-tab="tasks" aria-label="Tasks">🎁</button>
-      <button class="side-btn help" aria-label="Help">?</button>
+      <div class="earned"><span>+</span><strong id="earned">0.0000</strong> <small>PERS</small></div>
 
       <div class="coin-wrap">
         <div class="coin">
-          <div class="coin-inner"><img src="assets/pers-logo.png" alt="PERSEPOLIS PERS"><span>PERS</span></div>
+          <div class="coin-inner">
+            <img src="PERS_logo_final.png" alt="PERSEPOLIS PERS">
+            <span>PERS</span>
+          </div>
         </div>
       </div>
 
@@ -53,27 +48,17 @@
       <button class="claim" id="claim">CLAIM</button>
     </section>
 
-    <section class="panel" id="mine">
-      <h2>MINING</h2>
-      <div class="stats">
-        <div><small>LEVEL</small><b id="level2">1</b></div>
-        <div><small>SPEED</small><b id="speed2">1.00 PERS/h</b></div>
-        <div><small>NEXT UPGRADE</small><b id="next">100 PERS</b></div>
-        <div><small>STATUS</small><b>ACTIVE</b></div>
-      </div>
+    <section class="panel" id="tasks">
+      <h2>TASKS</h2>
+      <div class="task">🎁 Daily check-in <button data-reward="10">+10 PERS</button></div>
+      <div class="task">📣 Follow community <button data-reward="25">+25 PERS</button></div>
+      <div class="task">👥 Invite a friend <button data-reward="50">+50 PERS</button></div>
     </section>
 
     <section class="panel" id="miners">
       <h2>MINERS</h2>
-      <div class="buy-note"><b>MORE MINING POWER?</b><span>Use your PERS balance to unlock higher levels.</span></div>
+      <div class="buy-note"><b>MORE MINING POWER?</b><span>Use your saved PERS to unlock higher mining levels.</span></div>
       <div class="miner-grid" id="minerGrid"></div>
-    </section>
-
-    <section class="panel" id="tasks">
-      <h2>TASKS</h2>
-      <div class="task">🎁 Daily check-in <button>+10 PERS</button></div>
-      <div class="task">📣 Follow community <button>+25 PERS</button></div>
-      <div class="task">👥 Invite a friend <button>+50 PERS</button></div>
     </section>
 
     <section class="panel" id="friends">
