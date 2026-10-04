@@ -9,5 +9,12 @@
   "assets": {
     "directory": ".",
     "binding": "ASSETS"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "persepolis-db",
+      "database_id": "ed702fa6-2daf-4959-..."
+    }
+  ]
 }
