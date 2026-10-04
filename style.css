@@ -36,4 +36,88 @@ body{min-height:100vh;background:#050302 url("PERS_logo_final.png") center 150px
 .contract{margin-top:9px}.contract small{display:block;color:#88887d;font-size:8px}.contract code{display:block;margin-top:8px;font-size:8px;color:#e5c45e;word-break:break-all}
 nav{position:fixed;z-index:30;left:50%;bottom:0;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 5px calc(8px + env(safe-area-inset-bottom));background:rgba(2,2,2,.96);border-top:1px solid #25251f;backdrop-filter:blur(12px)}
 .nav{border:0;background:transparent;color:#77766e;font-size:20px;display:flex;flex-direction:column;gap:3px;align-items:center}.nav b{font-size:9px;font-weight:500}.nav.active{color:#ffd33e}.nav.active:after{content:"";width:38px;height:2px;background:#ffd33e;box-shadow:0 0 9px #ffd33e;margin-top:2px}
-@media(max-width:380px){.hero{min-height:720px;padding-left:13px;padding-right:13px}.coin{width:235px;height:235px}.saved-balance{font-size:28px}.earned strong{font-size:34px}}
+@media(max-width:380px){.hero{min-height:720px;padding-left:13px;padding-right:13px}.coin{width:235px;height:235px}.saved-balance{font-size:28px}.earned strong{font-size:34px}} #withdrawModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.75);
+  padding:20px;
+}
+
+.withdraw-box{
+  width:100%;
+  max-width:420px;
+  background:#0d0906;
+  border:1px solid #d4a83d;
+  border-radius:20px;
+  padding:22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.7);
+}
+
+.withdraw-box h2{
+  margin:0;
+  color:#f0c94e;
+  font-size:20px;
+  letter-spacing:1px;
+}
+
+.withdraw-box p{
+  margin:6px 0 20px;
+  color:#aaa08d;
+  font-size:11px;
+}
+
+.withdraw-info{
+  display:flex;
+  justify-content:space-between;
+  padding:11px 0;
+  border-bottom:1px solid rgba(202,162,54,.15);
+  font-size:11px;
+}
+
+.withdraw-info span{
+  color:#999184;
+}
+
+.withdraw-info b{
+  color:#f1d15e;
+}
+
+#withdrawAmount{
+  width:100%;
+  margin-top:18px;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #6d5725;
+  background:#050302;
+  color:#fff;
+  font-size:15px;
+  outline:none;
+}
+
+.withdraw-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:16px;
+}
+
+.withdraw-actions button{
+  padding:13px;
+  border:0;
+  border-radius:11px;
+  font-weight:900;
+}
+
+#withdrawCancel{
+  background:#29241d;
+  color:#aaa;
+}
+
+#withdrawConfirm{
+  background:#e72216;
+  color:#fff1cf;
+}
