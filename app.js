@@ -131,4 +131,50 @@ async function initTon(){
 
 render();
 initTon();
-setInterval(render,1000);
+setInterval(render,1000);const withdrawModal = document.createElement("div");
+withdrawModal.id = "withdrawModal";
+withdrawModal.innerHTML = `
+  <div class="withdraw-box">
+    <h2>Withdraw PERS</h2>
+    <p>Transfer Pool to Wallet</p>
+
+    <div class="withdraw-info">
+      <span>Available Pool</span>
+      <b id="withdrawAvailable">0.0000 PERS</b>
+    </div>
+
+    <div class="withdraw-info">
+      <span>Minimum withdrawal</span>
+      <b>10 PERS</b>
+    </div>
+
+    <div class="withdraw-info">
+      <span>Fee</span>
+      <b>0 PERS</b>
+    </div>
+
+    <input id="withdrawAmount" type="number" placeholder="Amount PERS">
+
+    <div class="withdraw-actions">
+      <button id="withdrawCancel">CANCEL</button>
+      <button id="withdrawConfirm">CONFIRM</button>
+    </div>
+  </div>
+`;
+
+document.body.appendChild(withdrawModal);
+
+document.querySelector("#withdrawBtn").onclick = () => {
+  accrue();
+  document.querySelector("#withdrawAvailable").textContent =
+    fmt(state.saved) + " PERS";
+  withdrawModal.style.display = "flex";
+};
+
+document.querySelector("#withdrawCancel").onclick = () => {
+  withdrawModal.style.display = "none";
+};
+
+document.querySelector("#withdrawConfirm").onclick = () => {
+  alert("Withdrawal system is being prepared.");
+};
