@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PERSEPOLIS PAYOUT</title>
+
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+  <script src="https://unpkg.com/tonweb@0.0.66/dist/tonweb.js"></script>
+
+  <style>
+    body{
+      margin:0;
+      padding:20px;
+      background:#0b1220;
+      color:white;
+      font-family:Arial,sans-serif;
+    }
+
+    .box{
+      max-width:520px;
+      margin:auto;
+      background:#111a2b;
+      padding:24px;
+      border-radius:20px;
+    }
+
+    h1{
+      margin-top:0;
+      text-align:center;
+    }
+
+    .label{
+      margin-top:18px;
+      margin-bottom:7px;
+      color:#9ca9bd;
+    }
+
+    input{
+      width:100%;
+      box-sizing:border-box;
+      padding:14px;
+      border-radius:12px;
+      border:1px solid #334155;
+      background:#0b1220;
+      color:white;
+      font-size:16px;
+    }
+
+    button{
+      width:100%;
+      margin-top:20px;
+      padding:15px;
+      border:0;
+      border-radius:12px;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    #send{
+      background:#d62828;
+      color:white;
+    }
+
+    #status{
+      margin-top:18px;
+      padding:12px;
+      border-radius:10px;
+      background:#0b1220;
+      word-break:break-word;
+    }
+
+    .wallet{
+      margin:15px 0;
+      padding:12px;
+      background:#18243a;
+      border-radius:10px;
+      word-break:break-all;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <h1>🏛️ PERSEPOLIS PAYOUT</h1>
+
+  <div id="ton-connect"></div>
+
+  <div class="wallet">
+    <b>Payout Wallet</b><br>
+    UQC3-z4up-Kdmn3q_ETH9WrNDfCGGrHBUY3T1yaF9Zs7DjS
+  </div>
+
+  <div class="label">
+    Recipient Wallet
+  </div>
+
+  <input
+    id="recipient"
+    placeholder="UQ... or EQ..."
+  >
+
+  <div class="label">
+    Amount PERS
+  </div>
+
+  <input
+    id="amount"
+    type="number"
+    min="10"
+    step="0.000000001"
+    placeholder="10"
+  >
+
+  <button id="send">
+    SEND PERS
+  </button>
+
+  <div id="status">
+    Waiting for payout wallet...
+  </div>
+
+</div>
+
+
+<script>
+
+const PERS_MASTER =
+  "EQBxwHlh-mqsszryIRQeFpvaG91EqS3HWtiQo4h2-UzYlBAX";
+
+const PAYOUT_WALLET =
+  "UQC3-z4up-Kdmn3q_ETH9WrNDfCGGrHBUY3T1yaF9Zs7DjS";
+
+const PERS_DECIMALS = 9;
+
+let connectedWallet = null;
+
+const statusEl =
+  document.querySelector("#status");
+
+function status(text){
+  statusEl.textContent = text;
+}
+
+
+/* TON CONNECT */
+
+const tonConnectUI =
+  new TON_CONNECT_UI.TonConnectUI({
+
+    manifestUrl:
+      "https://persepolis.ahoon201.workers.dev/tonconnect-manifest.json?v=4",
+
+    buttonRootId:
+      "ton-connect"
+  });
+
+
+tonConnectUI.onStatusChange(wallet => {
+
+  connectedWallet = wallet;
+
+  if(!wallet){
+
+    status(
+      "Connect PERSEPOLIS PAYOUT wallet."
+    );
+
+    return;
+  }
+
+  try{
+
+    const connected =
+      new TonWeb.utils.Address(
+        wallet.account.address
+      );
+
+    const payout =
+      new TonWeb.utils.Address(
+        PAYOUT_WALLET
+      );
+
+    if(
+      connected.toString(false) ===
+      payout.toString(false)
+    ){
+
+      status(
+        "✅ PERSEPOLIS PAYOUT wallet connected."
+      );
+
+    }else{
+
+      status(
+        "⚠️ Wrong wallet. Connect PERSEPOLIS PAYOUT."
+      );
+    }
+
+  }catch(e){
+
+    console.error(e);
+
+    status(
+      "Wallet address error."
+    );
+  }
+
+});
+
+
+/* DECIMAL PERS → NANO PERS */
+
+function toNanoPERS(value){
+
+  const s =
+    String(value).trim();
+
+  if(!/^\d+(\.\d+)?$/.test(s))
+    throw new Error("Invalid amount");
+
+  const parts =
+    s.split(".");
+
+  const whole =
+    parts[0];
+
+  let decimal =
+    parts[1] || "";
+
+  if(decimal.length > PERS_DECIMALS)
+    throw new Error(
+      "Maximum 9 decimal places."
+    );
+
+  decimal =
+    decimal.padEnd(
+      PERS_DECIMALS,
+      "0"
+    );
+
+  return new TonWeb.utils.BN(
+    whole + decimal
+  );
+}
+
+
+/* BYTES → BASE64 */
+
+function bytesToBase64(bytes){
+
+  let binary = "";
+
+  for(
+    let i = 0;
+    i < bytes.length;
+    i++
+  ){
+    binary +=
+      String.fromCharCode(
+        bytes[i]
+      );
+  }
+
+  return btoa(binary);
+}
+
+
+/* SEND REAL PERS */
+
+document.querySelector("#send").onclick =
+  async () => {
+
+    try{
+
+      if(!connectedWallet){
+
+        alert(
+          "Connect the payout wallet first."
+        );
+
+        return;
+      }
+
+
+      const connected =
+        new TonWeb.utils.Address(
+          connectedWallet.account.address
+        );
+
+      const payout =
+        new TonWeb.utils.Address(
+          PAYOUT_WALLET
+        );
+
+
+      if(
+        connected.toString(false) !==
+        payout.toString(false)
+      ){
+
+        alert(
+          "Wrong wallet. Connect PERSEPOLIS PAYOUT."
+        );
+
+        return;
+      }
+
+
+      const recipient =
+        document.querySelector(
+          "#recipient"
+        ).value.trim();
+
+
+      const amount =
+        document.querySelector(
+          "#amount"
+        ).value.trim();
+
+
+      if(!recipient){
+
+        alert(
+          "Enter recipient wallet."
+        );
+
+        return;
+      }
+
+
+      if(!amount){
+
+        alert(
+          "Enter PERS amount."
+        );
+
+        return;
+      }
+
+
+      if(Number(amount) < 10){
+
+        alert(
+          "Minimum withdrawal is 10 PERS."
+        );
+
+        return;
+      }
+
+
+      const recipientAddress =
+        new TonWeb.utils.Address(
+          recipient
+        );
+
+
+      status(
+        "Preparing PERS transaction..."
+      );
+
+
+      /*
+       * Connect to TON mainnet.
+       */
+
+      const provider =
+        new TonWeb.HttpProvider(
+          "https://toncenter.com/api/v2/jsonRPC"
+        );
+
+
+      const tonweb =
+        new TonWeb(provider);
+
+
+      /*
+       * Find PERS Jetton Wallet
+       * belonging to payout wallet.
+       */
+
+      const minter =
+        new TonWeb.token.jetton.JettonMinter(
+          provider,
+          {
+            address:
+              PERS_MASTER
+          }
+        );
+
+
+      const payoutJettonWallet =
+        await minter.getJettonWalletAddress(
+          payout
+        );
+
+
+      /*
+       * Build Jetton transfer body.
+       */
+
+      const jettonWallet =
+        new TonWeb.token.ft.JettonWallet(
+          provider,
+          {
+            address:
+              payoutJettonWallet
+          }
+        );
+
+
+      const jettonAmount =
+        toNanoPERS(amount);
+
+
+      const transferBody =
+        await jettonWallet.createTransferBody({
+
+          queryId:
+            Date.now(),
+
+          jettonAmount:
+            jettonAmount,
+
+          toAddress:
+            recipientAddress,
+
+          responseAddress:
+            payout,
+
+          forwardAmount:
+            new TonWeb.utils.BN(
+              "1"
+            )
+        });
+
+
+      const bodyBytes =
+        await transferBody.toBoc(false);
+
+
+      const payload =
+        bytesToBase64(
+          bodyBytes
+        );
+
+
+      status(
+        "Opening wallet confirmation..."
+      );
+
+
+      /*
+       * 0.05 TON is sent to the PERS Jetton Wallet
+       * for gas / processing.
+       */
+
+      const result =
+        await tonConnectUI.sendTransaction({
+
+          validUntil:
+            Math.floor(
+              Date.now() / 1000
+            ) + 300,
+
+          network:
+            "-239",
+
+          messages:[
+            {
+              address:
+                payoutJettonWallet.toString(
+                  true,
+                  true,
+                  true
+                ),
+
+              amount:
+                "50000000",
+
+              payload:
+                payload
+            }
+          ]
+        });
+
+
+      console.log(
+        "Transaction result:",
+        result
+      );
+
+
+      status(
+        "✅ Transaction approved and sent."
+      );
+
+
+      alert(
+        "PERS withdrawal transaction sent."
+      );
+
+
+    }catch(error){
+
+      console.error(
+        error
+      );
+
+      status(
+        "❌ Transaction failed: " +
+        (error?.message || error)
+      );
+
+      alert(
+        "Transaction failed.\n\n" +
+        (error?.message || error)
+      );
+
+    }
+
+  };
+
+</script>
+
+</body>
+</html>
