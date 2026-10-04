@@ -8,6 +8,18 @@ const KEY = "persepolis-v2";
 const API =
   "https://persepolis.ahoon201.workers.dev";
 
+/*
+  PERSEPOLIS PERS JETTON MASTER
+*/
+const PERS_MASTER =
+  "EQBxwHlh-mqsszryIRQeFpvaG91EqS3HWtiQo4h2-UzYlBAX";
+
+/*
+  TONAPI
+*/
+const TONAPI =
+  "https://tonapi.io/v2";
+
 let miners = [
   {
     level: 1,
@@ -17,6 +29,12 @@ let miners = [
 ];
 
 let connectedWallet = "";
+
+let walletPersBalance = 0;
+
+let walletBalanceLoading = false;
+
+let tonConnectUI = null;
 
 let state =
   JSON.parse(
@@ -35,7 +53,6 @@ let state =
 ========================= */
 
 function save(){
-
   localStorage.setItem(
     KEY,
     JSON.stringify(state)
@@ -48,9 +65,7 @@ function save(){
 ========================= */
 
 function fmt(n, d = 4){
-
-  return Number(n || 0)
-    .toFixed(d);
+  return Number(n || 0).toFixed(d);
 }
 
 
@@ -99,6 +114,7 @@ async function loadLevels(){
         "Invalid levels response",
         result
       );
+
     }
 
   }catch(error){
@@ -107,7 +123,9 @@ async function loadLevels(){
       "Failed to load levels",
       error
     );
+
   }
+
 }
 
 
@@ -137,12 +155,201 @@ function accrue(){
   state.mined +=
     elapsed /
     3600000 *
-    Number(miner.speed || 1);
+    Number(
+      miner.speed || 1
+    );
 
   state.last =
     now;
 
-  save();
+}
+
+
+/* =========================
+   NORMALIZE ADDRESS
+========================= */
+
+function normalizeAddress(address){
+
+  return String(
+    address || ""
+  )
+  .trim()
+  .replace(
+    /\s/g,
+    ""
+  );
+
+}
+
+
+/* =========================
+   LOAD REAL PERS BALANCE
+========================= */
+
+async function loadWalletPersBalance(){
+
+  if(
+    !connectedWallet
+  ){
+
+    walletPersBalance = 0;
+
+    updateWalletBalanceUI();
+
+    return;
+
+  }
+
+  if(
+    walletBalanceLoading
+  )
+    return;
+
+  walletBalanceLoading =
+    true;
+
+  try{
+
+    const address =
+      normalizeAddress(
+        connectedWallet
+      );
+
+    const response =
+      await fetch(
+        `${TONAPI}/accounts/${encodeURIComponent(
+          address
+        )}/jettons`
+      );
+
+    if(
+      !response.ok
+    ){
+
+      throw new Error(
+        `TONAPI ${response.status}`
+      );
+
+    }
+
+    const data =
+      await response.json();
+
+    const balances =
+      Array.isArray(
+        data.balances
+      )
+        ? data.balances
+        : [];
+
+    let found = null;
+
+    for(
+      const item
+      of balances
+    ){
+
+      const jetton =
+        item?.jetton;
+
+      const master =
+        jetton?.address ||
+        jetton?.master ||
+        "";
+
+      if(
+        normalizeAddress(master) ===
+        normalizeAddress(PERS_MASTER)
+      ){
+
+        found = item;
+
+        break;
+
+      }
+
+    }
+
+    if(found){
+
+      const rawBalance =
+        BigInt(
+          String(
+            found.balance || "0"
+          )
+        );
+
+      const decimals =
+        Number(
+          found?.jetton?.decimals ??
+          9
+        );
+
+      walletPersBalance =
+        Number(
+          rawBalance
+        ) /
+        Math.pow(
+          10,
+          decimals
+        );
+
+    }else{
+
+      walletPersBalance = 0;
+
+    }
+
+    updateWalletBalanceUI();
+
+    renderMiners();
+
+    console.log(
+      "Real PERS balance:",
+      walletPersBalance
+    );
+
+  }catch(error){
+
+    console.error(
+      "PERS balance error:",
+      error
+    );
+
+  }finally{
+
+    walletBalanceLoading =
+      false;
+
+  }
+
+}
+
+
+/* =========================
+   WALLET BALANCE UI
+========================= */
+
+function updateWalletBalanceUI(){
+
+  const elements =
+    document.querySelectorAll(
+      "[data-wallet-pers]"
+    );
+
+  elements.forEach(
+    el => {
+
+      el.textContent =
+        `${fmt(
+          walletPersBalance,
+          4
+        )} PERS`;
+
+    }
+  );
+
 }
 
 
@@ -167,47 +374,78 @@ function render(){
 
 
   const savedEl =
-    document.querySelector("#saved");
+    document.querySelector(
+      "#saved"
+    );
 
-  if(savedEl)
+  if(savedEl){
+
     savedEl.textContent =
-      fmt(state.saved);
+      fmt(
+        state.saved
+      );
+
+  }
 
 
   const earnedEl =
-    document.querySelector("#earned");
+    document.querySelector(
+      "#earned"
+    );
 
-  if(earnedEl)
+  if(earnedEl){
+
     earnedEl.textContent =
-      fmt(state.mined);
+      fmt(
+        state.mined
+      );
+
+  }
 
 
   const levelEl =
-    document.querySelector("#level");
+    document.querySelector(
+      "#level"
+    );
 
-  if(levelEl)
+  if(levelEl){
+
     levelEl.textContent =
       state.level;
 
+  }
+
 
   const speedEl =
-    document.querySelector("#speed");
+    document.querySelector(
+      "#speed"
+    );
 
-  if(speedEl)
+  if(speedEl){
+
     speedEl.textContent =
-      Number(m.speed || 0)
-        .toFixed(2);
+      Number(
+        m.speed || 0
+      ).toFixed(2);
+
+  }
 
 
   const nextCostEl =
-    document.querySelector("#nextCost");
+    document.querySelector(
+      "#nextCost"
+    );
 
   if(nextCostEl){
 
     nextCostEl.textContent =
       next
-        ? fmt(next.hold)
+        ? fmt(
+            next.hold,
+            0
+          )
         : "MAX";
+
   }
 
 
@@ -217,25 +455,35 @@ function render(){
 
 
   const nameEl =
-    document.querySelector("#name");
+    document.querySelector(
+      "#name"
+    );
 
   if(nameEl){
 
     nameEl.innerHTML =
       `${firstName} <span>✓</span>`;
+
   }
 
 
   const name2El =
-    document.querySelector("#name2");
+    document.querySelector(
+      "#name2"
+    );
 
-  if(name2El)
+  if(name2El){
+
     name2El.textContent =
       firstName;
 
+  }
+
 
   const uidEl =
-    document.querySelector("#uid");
+    document.querySelector(
+      "#uid"
+    );
 
   if(uidEl){
 
@@ -243,15 +491,17 @@ function render(){
       tg?.initDataUnsafe?.user?.id
         ? `Telegram ID: ${tg.initDataUnsafe.user.id}`
         : "Telegram user";
+
   }
 
 
   renderMiners();
+
 }
 
 
 /* =========================
-   MINERS — 400 LEVELS
+   MINER CARDS
 ========================= */
 
 function renderMiners(){
@@ -264,153 +514,673 @@ function renderMiners(){
   if(!grid)
     return;
 
-  grid.innerHTML = "";
+
+  grid.innerHTML =
+    "";
 
 
-  miners.forEach((m, i)=>{
+  miners.forEach(
+    (m, i)=>{
 
-    const level =
-      Number(m.level || i + 1);
+      const level =
+        Number(
+          m.level ||
+          i + 1
+        );
 
-    const hold =
-      Number(m.hold || 0);
+      const hold =
+        Number(
+          m.hold ||
+          0
+        );
 
-    const speed =
-      Number(m.speed || 0);
-
-
-    const active =
-      state.level >= level;
-
-    const nextLevel =
-      level === state.level + 1;
-
-    const locked =
-      level > state.level;
-
-
-    const card =
-      document.createElement("div");
+      const speed =
+        Number(
+          m.speed ||
+          0
+        );
 
 
-    card.className =
-      "miner " +
-      (
-        active
-          ? "active"
-          : "locked"
+      const active =
+        state.level >=
+        level;
+
+
+      const nextLevel =
+        level ===
+        state.level + 1;
+
+
+      const locked =
+        level >
+        state.level;
+
+
+      const enoughBalance =
+        walletPersBalance >=
+        hold;
+
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+
+      card.className =
+        "miner " +
+        (
+          active
+            ? "active"
+            : "locked"
+        );
+
+
+      let buttonText;
+
+
+      if(active){
+
+        buttonText =
+          "ACTIVE";
+
+      }else if(nextLevel){
+
+        buttonText =
+          `HOLD ${fmt(
+            hold,
+            0
+          )} PERS`;
+
+      }else{
+
+        buttonText =
+          `LVL ${level}`;
+
+      }
+
+
+      card.innerHTML = `
+
+        <span class="lvl">
+          LVL ${level}
+        </span>
+
+        <div class="price">
+
+          ${
+            hold === 0
+              ? "FREE"
+              : fmt(
+                  hold,
+                  0
+                )
+          }
+
+          <small>
+            PERS HOLD
+          </small>
+
+        </div>
+
+        <div class="mspeed">
+
+          SPEED
+
+          <b>
+            ${speed.toFixed(
+              2
+            )} PERS/h
+          </b>
+
+        </div>
+
+        <button>
+          ${buttonText}
+        </button>
+
+      `;
+
+
+      const btn =
+        card.querySelector(
+          "button"
+        );
+
+
+      /*
+        NEXT LEVEL
+      */
+
+      if(nextLevel){
+
+        btn.onclick =
+          ()=>{
+
+            openLevelModal(
+              level,
+              hold,
+              walletPersBalance
+            );
+
+          };
+
+      }
+
+
+      /*
+        LOCKED FUTURE LEVELS
+      */
+
+      if(locked &&
+         !nextLevel){
+
+        btn.disabled =
+          true;
+
+      }
+
+
+      grid.appendChild(
+        card
       );
 
+    }
+  );
 
-    let buttonText;
+}
 
 
-    if(active){
+/* =========================
+   LEVEL MODAL
+========================= */
 
-      buttonText =
-        "ACTIVE";
+function createLevelModal(){
 
-    }else if(nextLevel){
+  if(
+    document.querySelector(
+      "#levelModal"
+    )
+  )
+    return;
 
-      buttonText =
-        `HOLD ${fmt(hold,0)} PERS`;
+
+  const modal =
+    document.createElement(
+      "div"
+    );
+
+
+  modal.id =
+    "levelModal";
+
+
+  modal.innerHTML = `
+
+    <div
+      id="levelModalBackdrop"
+      style="
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.78);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        z-index:99999;
+        padding:22px;
+      "
+    >
+
+      <div
+        style="
+          width:100%;
+          max-width:430px;
+          background:#120f0b;
+          border:1px solid #d7aa27;
+          border-radius:24px;
+          padding:24px;
+          box-shadow:
+            0 0 40px
+            rgba(218,171,39,.25);
+        "
+      >
+
+        <div
+          style="
+            text-align:center;
+            color:#f3cf4a;
+            font-size:24px;
+            font-weight:800;
+            margin-bottom:8px;
+          "
+        >
+          UNLOCK LEVEL
+        </div>
+
+
+        <div
+          id="levelModalTitle"
+          style="
+            text-align:center;
+            color:white;
+            font-size:18px;
+            margin-bottom:24px;
+          "
+        >
+          LVL 2
+        </div>
+
+
+        <div
+          style="
+            background:#1c1711;
+            border-radius:16px;
+            padding:16px;
+            margin-bottom:10px;
+          "
+        >
+
+          <div
+            style="
+              color:#aaa;
+              font-size:13px;
+            "
+          >
+            REQUIRED HOLDING
+          </div>
+
+          <div
+            id="modalRequired"
+            style="
+              color:#f3cf4a;
+              font-size:25px;
+              font-weight:800;
+              margin-top:5px;
+            "
+          >
+            0 PERS
+          </div>
+
+        </div>
+
+
+        <div
+          style="
+            background:#1c1711;
+            border-radius:16px;
+            padding:16px;
+            margin-bottom:10px;
+          "
+        >
+
+          <div
+            style="
+              color:#aaa;
+              font-size:13px;
+            "
+          >
+            YOUR ASSETS
+          </div>
+
+          <div
+            id="modalAssets"
+            style="
+              color:#20e59a;
+              font-size:25px;
+              font-weight:800;
+              margin-top:5px;
+            "
+          >
+            0 PERS
+          </div>
+
+        </div>
+
+
+        <div
+          style="
+            background:#1c1711;
+            border-radius:16px;
+            padding:16px;
+            margin-bottom:22px;
+          "
+        >
+
+          <div
+            style="
+              color:#aaa;
+              font-size:13px;
+            "
+          >
+            MISSING
+          </div>
+
+          <div
+            id="modalMissing"
+            style="
+              color:#ff5a4f;
+              font-size:25px;
+              font-weight:800;
+              margin-top:5px;
+            "
+          >
+            0 PERS
+          </div>
+
+        </div>
+
+
+        <button
+          id="levelBuyButton"
+          style="
+            width:100%;
+            border:0;
+            border-radius:16px;
+            padding:17px;
+            font-size:18px;
+            font-weight:800;
+            background:#ed1c16;
+            color:white;
+            margin-bottom:10px;
+          "
+        >
+          BUY LEVEL
+        </button>
+
+
+        <button
+          id="levelCancelButton"
+          style="
+            width:100%;
+            border:0;
+            border-radius:16px;
+            padding:14px;
+            font-size:16px;
+            font-weight:700;
+            background:#2a251f;
+            color:#aaa;
+          "
+        >
+          CANCEL
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+
+  document.body.appendChild(
+    modal
+  );
+
+
+  document
+    .querySelector(
+      "#levelCancelButton"
+    )
+    ?.addEventListener(
+      "click",
+      closeLevelModal
+    );
+
+
+  document
+    .querySelector(
+      "#levelModalBackdrop"
+    )
+    ?.addEventListener(
+      "click",
+      event => {
+
+        if(
+          event.target.id ===
+          "levelModalBackdrop"
+        ){
+
+          closeLevelModal();
+
+        }
+
+      }
+    );
+
+}
+
+
+/* =========================
+   OPEN LEVEL MODAL
+========================= */
+
+function openLevelModal(
+  level,
+  required,
+  assets
+){
+
+  createLevelModal();
+
+
+  const missing =
+    Math.max(
+      0,
+      required -
+      assets
+    );
+
+
+  const title =
+    document.querySelector(
+      "#levelModalTitle"
+    );
+
+  const requiredEl =
+    document.querySelector(
+      "#modalRequired"
+    );
+
+  const assetsEl =
+    document.querySelector(
+      "#modalAssets"
+    );
+
+  const missingEl =
+    document.querySelector(
+      "#modalMissing"
+    );
+
+  const buyBtn =
+    document.querySelector(
+      "#levelBuyButton"
+    );
+
+
+  if(title){
+
+    title.textContent =
+      `LVL ${level}`;
+
+  }
+
+
+  if(requiredEl){
+
+    requiredEl.textContent =
+      `${fmt(
+        required,
+        0
+      )} PERS`;
+
+  }
+
+
+  if(assetsEl){
+
+    assetsEl.textContent =
+      `${fmt(
+        assets,
+        4
+      )} PERS`;
+
+  }
+
+
+  if(missingEl){
+
+    missingEl.textContent =
+      missing > 0
+        ? `${fmt(
+            missing,
+            4
+          )} PERS`
+        : "0 PERS";
+
+  }
+
+
+  if(buyBtn){
+
+    if(
+      assets >=
+      required
+    ){
+
+      buyBtn.disabled =
+        false;
+
+      buyBtn.textContent =
+        "BUY LEVEL";
+
+      buyBtn.style.opacity =
+        "1";
+
+
+      buyBtn.onclick =
+        ()=>{
+
+          unlockLevel(
+            level,
+            required
+          );
+
+        };
 
     }else{
 
-      buttonText =
-        `LVL ${level}`;
-    }
-
-
-    card.innerHTML = `
-      <span class="lvl">
-        LVL ${level}
-      </span>
-
-      <div class="price">
-        ${
-          hold === 0
-            ? "FREE"
-            : fmt(hold,0)
-        }
-
-        <small>PERS HOLD</small>
-      </div>
-
-      <div class="mspeed">
-        SPEED
-
-        <b>
-          ${speed.toFixed(2)} PERS/h
-        </b>
-      </div>
-
-      <button>
-        ${buttonText}
-      </button>
-    `;
-
-
-    const btn =
-      card.querySelector(
-        "button"
-      );
-
-
-    if(nextLevel){
-
-      btn.onclick = ()=>{
-
-        /*
-          IMPORTANT:
-          PERS IS NOT SPENT.
-
-          The current saved balance is used
-          only as the holding requirement
-          for this stage.
-        */
-
-        if(
-          Number(state.saved) <
-          hold
-        ){
-
-          alert(
-            `You need to hold ${fmt(
-              hold,
-              0
-            )} PERS to unlock LVL ${level}.`
-          );
-
-          return;
-        }
-
-
-        state.level =
-          level;
-
-        state.last =
-          Date.now();
-
-        save();
-
-        render();
-      };
-    }
-
-
-    if(locked){
-
-      btn.disabled =
+      buyBtn.disabled =
         true;
+
+      buyBtn.textContent =
+        "INSUFFICIENT PERS";
+
+      buyBtn.style.opacity =
+        ".55";
+
+      buyBtn.onclick =
+        null;
+
     }
 
+  }
 
-    grid.appendChild(
-      card
+
+  const modal =
+    document.querySelector(
+      "#levelModal"
     );
 
-  });
+
+  if(modal){
+
+    modal.style.display =
+      "block";
+
+  }
+
+}
+
+
+/* =========================
+   CLOSE LEVEL MODAL
+========================= */
+
+function closeLevelModal(){
+
+  const modal =
+    document.querySelector(
+      "#levelModal"
+    );
+
+  if(modal){
+
+    modal.style.display =
+      "none";
+
+  }
+
+}
+
+
+/* =========================
+   UNLOCK LEVEL
+========================= */
+
+async function unlockLevel(
+  level,
+  required
+){
+
+  /*
+    Refresh blockchain balance
+    before unlocking.
+  */
+
+  await loadWalletPersBalance();
+
+
+  if(
+    walletPersBalance <
+    required
+  ){
+
+    alert(
+      `You need to hold ${fmt(
+        required,
+        0
+      )} PERS in your wallet.`
+    );
+
+    return;
+
+  }
+
+
+  /*
+    IMPORTANT:
+
+    PERS IS NOT SPENT.
+
+    The user only needs to
+    HOLD the required amount.
+  */
+
+  state.level =
+    level;
+
+  state.last =
+    Date.now();
+
+  save();
+
+  closeLevelModal();
+
+  render();
+
+
+  alert(
+    `LVL ${level} unlocked successfully!`
+  );
+
 }
 
 
@@ -426,23 +1196,26 @@ const claimBtn =
 
 if(claimBtn){
 
-  claimBtn.onclick = ()=>{
+  claimBtn.onclick =
+    ()=>{
 
-    accrue();
+      accrue();
 
-    state.saved +=
-      state.mined;
+      state.saved +=
+        state.mined;
 
-    state.mined =
-      0;
+      state.mined =
+        0;
 
-    state.last =
-      Date.now();
+      state.last =
+        Date.now();
 
-    save();
+      save();
 
-    render();
-  };
+      render();
+
+    };
+
 }
 
 
@@ -451,55 +1224,70 @@ if(claimBtn){
 ========================= */
 
 document
-  .querySelectorAll(".nav")
-  .forEach(btn=>{
+  .querySelectorAll(
+    ".nav"
+  )
+  .forEach(
+    btn => {
 
-    btn.onclick = ()=>{
+      btn.onclick =
+        ()=>{
 
-      const tab =
-        btn.dataset.tab;
-
-
-      document
-        .querySelectorAll(".nav")
-        .forEach(x=>{
-
-          x.classList.toggle(
-            "active",
-            x === btn
-          );
-
-        });
+          const tab =
+            btn.dataset.tab;
 
 
-      document
-        .querySelectorAll(".panel")
-        .forEach(x=>{
+          document
+            .querySelectorAll(
+              ".nav"
+            )
+            .forEach(
+              x => {
 
-          x.classList.toggle(
-            "active",
-            x.id === tab
-          );
+                x.classList.toggle(
+                  "active",
+                  x === btn
+                );
 
-        });
+              }
+            );
 
 
-      const mine =
-        document.querySelector(
-          "#mine"
-        );
+          document
+            .querySelectorAll(
+              ".panel"
+            )
+            .forEach(
+              x => {
 
-      if(mine){
+                x.classList.toggle(
+                  "active",
+                  x.id === tab
+                );
 
-        mine.style.display =
-          tab === "mine"
-            ? "block"
-            : "none";
-      }
+              }
+            );
 
-    };
 
-  });
+          const mine =
+            document.querySelector(
+              "#mine"
+            );
+
+
+          if(mine){
+
+            mine.style.display =
+              tab === "mine"
+                ? "block"
+                : "none";
+
+          }
+
+        };
+
+    }
+  );
 
 
 /* =========================
@@ -510,31 +1298,35 @@ document
   .querySelectorAll(
     "[data-reward]"
   )
-  .forEach(btn=>{
+  .forEach(
+    btn => {
 
-    btn.onclick = ()=>{
+      btn.onclick =
+        ()=>{
 
-      state.saved +=
-        Number(
-          btn.dataset.reward
-        );
+          state.saved +=
+            Number(
+              btn.dataset.reward
+            );
 
-      save();
+          save();
 
-      render();
+          render();
 
-      btn.disabled =
-        true;
+          btn.disabled =
+            true;
 
-      btn.textContent =
-        "CLAIMED";
-    };
+          btn.textContent =
+            "CLAIMED";
 
-  });
+        };
+
+    }
+  );
 
 
 /* =========================
-   REFERRAL
+   INVITE
 ========================= */
 
 function inviteFriends(){
@@ -556,7 +1348,9 @@ function inviteFriends(){
     )}`;
 
 
-  if(tg?.openTelegramLink){
+  if(
+    tg?.openTelegramLink
+  ){
 
     tg.openTelegramLink(
       shareUrl
@@ -570,6 +1364,7 @@ function inviteFriends(){
     );
 
   }
+
 }
 
 
@@ -583,6 +1378,7 @@ if(shareBtn){
 
   shareBtn.onclick =
     inviteFriends;
+
 }
 
 
@@ -592,17 +1388,19 @@ if(shareBtn){
 
 async function initTon(){
 
-  if(!window.TON_CONNECT_UI)
+  if(
+    !window.TON_CONNECT_UI
+  )
     return;
 
 
   try{
 
-    const tonConnectUI =
+    tonConnectUI =
       new TON_CONNECT_UI.TonConnectUI({
 
         manifestUrl:
-          `${API}/tonconnect-manifest.json?v=6`,
+          `${API}/tonconnect-manifest.json?v=7`,
 
         buttonRootId:
           "ton-connect"
@@ -611,7 +1409,8 @@ async function initTon(){
 
 
     tonConnectUI.onStatusChange(
-      wallet=>{
+
+      async wallet => {
 
         const el =
           document.querySelector(
@@ -640,10 +1439,23 @@ async function initTon(){
 
           }
 
+
+          /*
+            REAL PERS BALANCE
+          */
+
+          await loadWalletPersBalance();
+
+
+          render();
+
         }else{
 
           connectedWallet =
             "";
+
+          walletPersBalance =
+            0;
 
 
           if(el){
@@ -653,9 +1465,15 @@ async function initTon(){
 
           }
 
+
+          updateWalletBalanceUI();
+
+          render();
+
         }
 
       }
+
     );
 
 
@@ -667,6 +1485,7 @@ async function initTon(){
     );
 
   }
+
 }
 
 
@@ -696,7 +1515,6 @@ withdrawModal.innerHTML = `
       Transfer Pool to Wallet
     </p>
 
-
     <div class="withdraw-info">
 
       <span>
@@ -708,7 +1526,6 @@ withdrawModal.innerHTML = `
       </b>
 
     </div>
-
 
     <div class="withdraw-info">
 
@@ -722,7 +1539,6 @@ withdrawModal.innerHTML = `
 
     </div>
 
-
     <div class="withdraw-info">
 
       <span>
@@ -735,13 +1551,11 @@ withdrawModal.innerHTML = `
 
     </div>
 
-
     <input
       id="withdrawAmount"
       type="number"
       placeholder="Amount PERS"
     >
-
 
     <div class="withdraw-actions">
 
@@ -750,7 +1564,6 @@ withdrawModal.innerHTML = `
       >
         CANCEL
       </button>
-
 
       <button
         id="withdrawConfirm"
@@ -761,6 +1574,7 @@ withdrawModal.innerHTML = `
     </div>
 
   </div>
+
 `;
 
 
@@ -770,7 +1584,7 @@ document.body.appendChild(
 
 
 /* =========================
-   OPEN WITHDRAW
+   WITHDRAW OPEN
 ========================= */
 
 const withdrawBtn =
@@ -781,36 +1595,39 @@ const withdrawBtn =
 
 if(withdrawBtn){
 
-  withdrawBtn.onclick = ()=>{
+  withdrawBtn.onclick =
+    ()=>{
 
-    accrue();
-
-
-    const available =
-      document.querySelector(
-        "#withdrawAvailable"
-      );
+      accrue();
 
 
-    if(available){
-
-      available.textContent =
-        fmt(state.saved) +
-        " PERS";
-
-    }
+      const available =
+        document.querySelector(
+          "#withdrawAvailable"
+        );
 
 
-    withdrawModal.style.display =
-      "flex";
+      if(available){
 
-  };
+        available.textContent =
+          fmt(
+            state.saved
+          ) +
+          " PERS";
+
+      }
+
+
+      withdrawModal.style.display =
+        "flex";
+
+    };
 
 }
 
 
 /* =========================
-   CANCEL WITHDRAW
+   WITHDRAW CANCEL
 ========================= */
 
 const withdrawCancel =
@@ -833,7 +1650,7 @@ if(withdrawCancel){
 
 
 /* =========================
-   CONFIRM WITHDRAW
+   WITHDRAW CONFIRM
 ========================= */
 
 const withdrawConfirm =
@@ -855,7 +1672,8 @@ if(withdrawConfirm){
 
       const amount =
         Number(
-          input?.value || 0
+          input?.value ||
+          0
         );
 
 
@@ -869,6 +1687,7 @@ if(withdrawConfirm){
         );
 
         return;
+
       }
 
 
@@ -885,16 +1704,20 @@ if(withdrawConfirm){
         );
 
         return;
+
       }
 
 
-      if(!connectedWallet){
+      if(
+        !connectedWallet
+      ){
 
         alert(
           "Please connect your TON wallet first."
         );
 
         return;
+
       }
 
 
@@ -904,6 +1727,7 @@ if(withdrawConfirm){
           await fetch(
             `${API}/withdraw`,
             {
+
               method:
                 "POST",
 
@@ -943,6 +1767,7 @@ if(withdrawConfirm){
           );
 
           return;
+
         }
 
 
@@ -984,6 +1809,8 @@ if(withdrawConfirm){
    START
 ========================= */
 
+createLevelModal();
+
 render();
 
 initTon();
@@ -991,11 +1818,37 @@ initTon();
 loadLevels();
 
 
-/* =========================
-   LIVE MINING
-========================= */
+/*
+  Refresh real wallet balance
+  every 15 seconds.
+*/
 
 setInterval(
-  render,
+  ()=>{
+
+    if(
+      connectedWallet
+    ){
+
+      loadWalletPersBalance();
+
+    }
+
+  },
+  15000
+);
+
+
+/*
+  Update mining display
+  every second.
+*/
+
+setInterval(
+  ()=>{
+
+    render();
+
+  },
   1000
 );
