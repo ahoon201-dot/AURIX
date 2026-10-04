@@ -25,7 +25,7 @@ body{min-height:100vh;background:#050302 url("PERS_logo_final.png") center 150px
 .coin-inner span{position:absolute;bottom:19px;color:#ffd44d;font-size:16px;font-weight:900;letter-spacing:4px;text-shadow:0 2px 4px #000}
 .speed-line{font-size:10px;color:#bcb7a8;margin:10px 0 14px}.speed-line b{color:#fff}
 .claim{width:92%;padding:17px;border-radius:18px;border:1px solid #ffd447;background:linear-gradient(180deg,#e62418,#9e0907);color:#ffe7a0;font-size:18px;font-weight:900;letter-spacing:1px;box-shadow:0 0 24px rgba(255,40,20,.22),inset 0 1px rgba(255,255,255,.2)}
-.panel{display:none;padding:8px 14px 22px}.panel.active{display:block}h2{font-size:11px;letter-spacing:3px;color:#f0c94e;margin:12px 2px 9px}
+.panel{display:none;padding:8px 14px 22px}.panel.active{display:block}h2{font-size:11px;letter-spacing:3px;color:#f0c94e;margin:12px 2px 9px} .withdraw-btn{width:92%;margin-top:10px;padding:14px;border-radius:16px;border:1px solid #d4a83d;background:rgba(12,9,6,.9);color:#f3cf63;font-size:14px;font-weight:900;letter-spacing:1px}
 .buy-note,.box,.task,.miner{border:1px solid rgba(202,162,54,.25);background:rgba(12,9,6,.92);border-radius:16px;padding:13px}
 .buy-note b{display:block;color:#f7d65e;font-size:11px}.buy-note span{display:block;color:#8e897b;font-size:8px;margin-top:5px}
 .miner-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.miner{min-height:178px}.miner.active{border-color:#d1a63b}
