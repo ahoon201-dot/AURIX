@@ -3,18 +3,21 @@
   "name": "persepolis",
   "main": "worker.js",
   "compatibility_date": "2026-10-02",
+
   "observability": {
     "enabled": true
   },
+
   "assets": {
     "directory": ".",
     "binding": "ASSETS"
   },
+
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "persepolis-db",
-      "database_id": "ed702fa6-2daf-4959-..."
+      "database_id": "ed702fa6-2daf-4959-8b60-afc9e1366346"
     }
   ]
 }
