@@ -8,7 +8,7 @@ async function initTon(){
     const tonConnectUI =
       new TON_CONNECT_UI.TonConnectUI({
         manifestUrl:
-          `${API}/tonconnect-manifest.json?v=7`,
+          `${API}/tonconnect-manifest.json?v=8`,
         buttonRootId:
           "ton-connect"
       });
@@ -21,9 +21,7 @@ async function initTon(){
             "#walletAddress"
           );
 
-        if(
-          wallet?.account?.address
-        ){
+        if(wallet?.account?.address){
 
           connectedWallet =
             wallet.account.address;
@@ -44,15 +42,14 @@ async function initTon(){
 
           connectedWallet = "";
 
+          state.walletPers = 0;
+
           if(el){
             el.textContent =
               "CONNECT WALLET";
           }
 
-          state.walletPers = 0;
-
           save();
-
           render();
         }
       }
@@ -71,8 +68,12 @@ async function initTon(){
 
 async function updatePersBalance(){
 
-  if(!connectedWallet)
+  if(!connectedWallet){
+    state.walletPers = 0;
+    save();
+    render();
     return;
+  }
 
   try{
 
@@ -90,15 +91,30 @@ async function updatePersBalance(){
       );
 
     const response =
-      await fetch(url);
-
-    if(!response.ok)
-      throw new Error(
-        "PERS balance request failed"
+      await fetch(
+        url,
+        {
+          method: "GET",
+          cache: "no-store"
+        }
       );
+
+    if(!response.ok){
+
+      throw new Error(
+        "PERS balance HTTP " +
+        response.status
+      );
+
+    }
 
     const data =
       await response.json();
+
+    console.log(
+      "TONAPI PERS DATA:",
+      data
+    );
 
     const decimals =
       Number(
@@ -126,10 +142,22 @@ async function updatePersBalance(){
       state.walletPers
     );
 
+    /*
+      اگر مودال Level باز باشد،
+      موجودی آن را هم فوراً به‌روز کن.
+    */
+
+    if(
+      typeof updateOpenLevelModal ===
+      "function"
+    ){
+      updateOpenLevelModal();
+    }
+
   }catch(error){
 
     console.error(
-      "PERS balance error",
+      "PERS balance error:",
       error
     );
 
