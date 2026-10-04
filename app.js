@@ -1,153 +1,396 @@
 const tg = window.Telegram?.WebApp;
+
 tg?.ready();
 tg?.expand();
 
 const KEY = "persepolis-v2";
 
-const miners = [
-  {cost:0,speed:1},
-  {cost:100,speed:2},
-  {cost:500,speed:5},
-  {cost:2000,speed:12},
-  {cost:10000,speed:30},
-  {cost:50000,speed:80},
-  {cost:200000,speed:220},
-  {cost:1000000,speed:600}
+const API =
+  "https://persepolis.ahoon201.workers.dev";
+
+let miners = [
+  {
+    level: 1,
+    hold: 0,
+    speed: 1
+  }
 ];
 
 let connectedWallet = "";
 
 let state =
-  JSON.parse(localStorage.getItem(KEY) || "null") ||
+  JSON.parse(
+    localStorage.getItem(KEY) || "null"
+  ) ||
   {
-    saved:0,
-    mined:0,
-    level:1,
-    last:Date.now()
+    saved: 0,
+    mined: 0,
+    level: 1,
+    last: Date.now()
   };
 
+
+/* =========================
+   SAVE
+========================= */
+
 function save(){
-  localStorage.setItem(KEY, JSON.stringify(state));
+
+  localStorage.setItem(
+    KEY,
+    JSON.stringify(state)
+  );
 }
 
+
+/* =========================
+   FORMAT
+========================= */
+
+function fmt(n, d = 4){
+
+  return Number(n || 0)
+    .toFixed(d);
+}
+
+
+/* =========================
+   LOAD 400 LEVELS
+========================= */
+
+async function loadLevels(){
+
+  try{
+
+    const response =
+      await fetch(
+        `${API}/api/levels?ts=${Date.now()}`
+      );
+
+    const result =
+      await response.json();
+
+    if(
+      result.ok &&
+      Array.isArray(result.levels) &&
+      result.levels.length === 400
+    ){
+
+      miners =
+        result.levels;
+
+      if(state.level < 1)
+        state.level = 1;
+
+      if(state.level > 400)
+        state.level = 400;
+
+      save();
+
+      render();
+
+      console.log(
+        "PERSEPOLIS: 400 levels loaded"
+      );
+
+    }else{
+
+      console.error(
+        "Invalid levels response",
+        result
+      );
+    }
+
+  }catch(error){
+
+    console.error(
+      "Failed to load levels",
+      error
+    );
+  }
+}
+
+
+/* =========================
+   MINING
+========================= */
+
 function accrue(){
-  const now = Date.now();
-  const elapsed = Math.max(
-    0,
-    now - (state.last || now)
-  );
+
+  if(!miners.length)
+    return;
+
+  const now =
+    Date.now();
+
+  const elapsed =
+    Math.max(
+      0,
+      now -
+      (state.last || now)
+    );
+
+  const miner =
+    miners[state.level - 1] ||
+    miners[0];
 
   state.mined +=
-    elapsed / 3600000 *
-    miners[state.level - 1].speed;
+    elapsed /
+    3600000 *
+    Number(miner.speed || 1);
 
-  state.last = now;
+  state.last =
+    now;
 
   save();
 }
 
-function fmt(n,d=4){
-  return Number(n || 0).toFixed(d);
-}
+
+/* =========================
+   MAIN RENDER
+========================= */
 
 function render(){
 
+  if(!miners.length)
+    return;
+
   accrue();
 
-  const m = miners[state.level - 1];
-  const next = miners[state.level] || null;
+  const m =
+    miners[state.level - 1] ||
+    miners[0];
 
-  document.querySelector("#saved").textContent =
-    fmt(state.saved);
+  const next =
+    miners[state.level] ||
+    null;
 
-  document.querySelector("#earned").textContent =
-    fmt(state.mined);
 
-  document.querySelector("#level").textContent =
-    state.level;
+  const savedEl =
+    document.querySelector("#saved");
 
-  document.querySelector("#speed").textContent =
-    m.speed.toFixed(2);
+  if(savedEl)
+    savedEl.textContent =
+      fmt(state.saved);
 
-  document.querySelector("#nextCost").textContent =
-    next ? fmt(next.cost) : "MAX";
 
-  document.querySelector("#name").innerHTML =
-    `${tg?.initDataUnsafe?.user?.first_name || "Miner"} <span>✓</span>`;
+  const earnedEl =
+    document.querySelector("#earned");
 
-  document.querySelector("#name2").textContent =
-    tg?.initDataUnsafe?.user?.first_name || "Miner";
+  if(earnedEl)
+    earnedEl.textContent =
+      fmt(state.mined);
 
-  document.querySelector("#uid").textContent =
-    tg?.initDataUnsafe?.user?.id
-      ? `Telegram ID: ${tg.initDataUnsafe.user.id}`
-      : "Telegram user";
+
+  const levelEl =
+    document.querySelector("#level");
+
+  if(levelEl)
+    levelEl.textContent =
+      state.level;
+
+
+  const speedEl =
+    document.querySelector("#speed");
+
+  if(speedEl)
+    speedEl.textContent =
+      Number(m.speed || 0)
+        .toFixed(2);
+
+
+  const nextCostEl =
+    document.querySelector("#nextCost");
+
+  if(nextCostEl){
+
+    nextCostEl.textContent =
+      next
+        ? fmt(next.hold)
+        : "MAX";
+  }
+
+
+  const firstName =
+    tg?.initDataUnsafe?.user?.first_name ||
+    "Miner";
+
+
+  const nameEl =
+    document.querySelector("#name");
+
+  if(nameEl){
+
+    nameEl.innerHTML =
+      `${firstName} <span>✓</span>`;
+  }
+
+
+  const name2El =
+    document.querySelector("#name2");
+
+  if(name2El)
+    name2El.textContent =
+      firstName;
+
+
+  const uidEl =
+    document.querySelector("#uid");
+
+  if(uidEl){
+
+    uidEl.textContent =
+      tg?.initDataUnsafe?.user?.id
+        ? `Telegram ID: ${tg.initDataUnsafe.user.id}`
+        : "Telegram user";
+  }
+
 
   renderMiners();
 }
 
+
+/* =========================
+   MINERS — 400 LEVELS
+========================= */
+
 function renderMiners(){
 
   const grid =
-    document.querySelector("#minerGrid");
+    document.querySelector(
+      "#minerGrid"
+    );
+
+  if(!grid)
+    return;
 
   grid.innerHTML = "";
 
-  miners.forEach((m,i)=>{
 
-    const unlocked =
-      state.level >= i + 1;
+  miners.forEach((m, i)=>{
+
+    const level =
+      Number(m.level || i + 1);
+
+    const hold =
+      Number(m.hold || 0);
+
+    const speed =
+      Number(m.speed || 0);
+
+
+    const active =
+      state.level >= level;
+
+    const nextLevel =
+      level === state.level + 1;
+
+    const locked =
+      level > state.level;
+
 
     const card =
       document.createElement("div");
 
+
     card.className =
       "miner " +
-      (unlocked ? "active" : "locked");
+      (
+        active
+          ? "active"
+          : "locked"
+      );
+
+
+    let buttonText;
+
+
+    if(active){
+
+      buttonText =
+        "ACTIVE";
+
+    }else if(nextLevel){
+
+      buttonText =
+        `HOLD ${fmt(hold,0)} PERS`;
+
+    }else{
+
+      buttonText =
+        `LVL ${level}`;
+    }
+
 
     card.innerHTML = `
       <span class="lvl">
-        LVL ${i + 1}
+        LVL ${level}
       </span>
 
       <div class="price">
-        ${m.cost === 0 ? "FREE" : fmt(m.cost,0)}
-        <small>PERS</small>
+        ${
+          hold === 0
+            ? "FREE"
+            : fmt(hold,0)
+        }
+
+        <small>PERS HOLD</small>
       </div>
 
       <div class="mspeed">
         SPEED
-        <b>${m.speed.toFixed(2)} PERS/h</b>
+
+        <b>
+          ${speed.toFixed(2)} PERS/h
+        </b>
       </div>
 
       <button>
-        ${
-          unlocked
-            ? "ACTIVE"
-            : `UNLOCK ${fmt(m.cost,0)} PERS`
-        }
+        ${buttonText}
       </button>
     `;
 
-    const btn =
-      card.querySelector("button");
 
-    if(!unlocked){
+    const btn =
+      card.querySelector(
+        "button"
+      );
+
+
+    if(nextLevel){
 
       btn.onclick = ()=>{
 
-        if(state.saved < m.cost){
+        /*
+          IMPORTANT:
+          PERS IS NOT SPENT.
 
-          alert("Not enough saved PERS.");
+          The current saved balance is used
+          only as the holding requirement
+          for this stage.
+        */
+
+        if(
+          Number(state.saved) <
+          hold
+        ){
+
+          alert(
+            `You need to hold ${fmt(
+              hold,
+              0
+            )} PERS to unlock LVL ${level}.`
+          );
 
           return;
         }
 
-        state.saved -= m.cost;
 
-        state.level = i + 1;
+        state.level =
+          level;
 
-        state.last = Date.now();
+        state.last =
+          Date.now();
 
         save();
 
@@ -155,72 +398,144 @@ function renderMiners(){
       };
     }
 
-    grid.appendChild(card);
+
+    if(locked){
+
+      btn.disabled =
+        true;
+    }
+
+
+    grid.appendChild(
+      card
+    );
+
   });
 }
 
-document.querySelector("#claim").onclick = ()=>{
 
-  accrue();
+/* =========================
+   CLAIM
+========================= */
 
-  state.saved += state.mined;
+const claimBtn =
+  document.querySelector(
+    "#claim"
+  );
 
-  state.mined = 0;
 
-  state.last = Date.now();
+if(claimBtn){
 
-  save();
+  claimBtn.onclick = ()=>{
 
-  render();
-};
-
-document.querySelectorAll(".nav").forEach(btn=>{
-
-  btn.onclick = ()=>{
-
-    const tab = btn.dataset.tab;
-
-    document
-      .querySelectorAll(".nav")
-      .forEach(x =>
-        x.classList.toggle(
-          "active",
-          x === btn
-        )
-      );
-
-    document
-      .querySelectorAll(".panel")
-      .forEach(x =>
-        x.classList.toggle(
-          "active",
-          x.id === tab
-        )
-      );
-
-    document.querySelector("#mine").style.display =
-      tab === "mine"
-        ? "block"
-        : "none";
-  };
-});
-
-document.querySelectorAll("[data-reward]").forEach(btn=>{
-
-  btn.onclick = ()=>{
+    accrue();
 
     state.saved +=
-      Number(btn.dataset.reward);
+      state.mined;
+
+    state.mined =
+      0;
+
+    state.last =
+      Date.now();
 
     save();
 
     render();
-
-    btn.disabled = true;
-
-    btn.textContent = "CLAIMED";
   };
-});
+}
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+document
+  .querySelectorAll(".nav")
+  .forEach(btn=>{
+
+    btn.onclick = ()=>{
+
+      const tab =
+        btn.dataset.tab;
+
+
+      document
+        .querySelectorAll(".nav")
+        .forEach(x=>{
+
+          x.classList.toggle(
+            "active",
+            x === btn
+          );
+
+        });
+
+
+      document
+        .querySelectorAll(".panel")
+        .forEach(x=>{
+
+          x.classList.toggle(
+            "active",
+            x.id === tab
+          );
+
+        });
+
+
+      const mine =
+        document.querySelector(
+          "#mine"
+        );
+
+      if(mine){
+
+        mine.style.display =
+          tab === "mine"
+            ? "block"
+            : "none";
+      }
+
+    };
+
+  });
+
+
+/* =========================
+   TASK REWARDS
+========================= */
+
+document
+  .querySelectorAll(
+    "[data-reward]"
+  )
+  .forEach(btn=>{
+
+    btn.onclick = ()=>{
+
+      state.saved +=
+        Number(
+          btn.dataset.reward
+        );
+
+      save();
+
+      render();
+
+      btn.disabled =
+        true;
+
+      btn.textContent =
+        "CLAIMED";
+    };
+
+  });
+
+
+/* =========================
+   REFERRAL
+========================= */
 
 function inviteFriends(){
 
@@ -228,15 +543,24 @@ function inviteFriends(){
     tg?.initDataUnsafe?.user?.id ||
     "miner";
 
+
   const inviteUrl =
     `https://t.me/Pirouzi6_bot?startapp=ref_${userId}`;
 
+
   const shareUrl =
-    `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent("🚀 Join PERSEPOLIS Mining")}`;
+    `https://t.me/share/url?url=${encodeURIComponent(
+      inviteUrl
+    )}&text=${encodeURIComponent(
+      "🚀 Join PERSEPOLIS Mining"
+    )}`;
+
 
   if(tg?.openTelegramLink){
 
-    tg.openTelegramLink(shareUrl);
+    tg.openTelegramLink(
+      shareUrl
+    );
 
   }else{
 
@@ -244,16 +568,33 @@ function inviteFriends(){
       shareUrl,
       "_blank"
     );
+
   }
 }
 
-document.querySelector("#share2").onclick =
-  inviteFriends;
+
+const shareBtn =
+  document.querySelector(
+    "#share2"
+  );
+
+
+if(shareBtn){
+
+  shareBtn.onclick =
+    inviteFriends;
+}
+
+
+/* =========================
+   TON CONNECT
+========================= */
 
 async function initTon(){
 
   if(!window.TON_CONNECT_UI)
     return;
+
 
   try{
 
@@ -261,55 +602,72 @@ async function initTon(){
       new TON_CONNECT_UI.TonConnectUI({
 
         manifestUrl:
-          "https://persepolis.ahoon201.workers.dev/tonconnect-manifest.json?v=3",
+          `${API}/tonconnect-manifest.json?v=6`,
 
         buttonRootId:
           "ton-connect"
+
       });
 
-    tonConnectUI.onStatusChange(wallet=>{
 
-      const el =
-        document.querySelector(
-          "#walletAddress"
-        );
+    tonConnectUI.onStatusChange(
+      wallet=>{
 
-      if(wallet?.account?.address){
+        const el =
+          document.querySelector(
+            "#walletAddress"
+          );
 
-        connectedWallet =
-          wallet.account.address;
 
-        const a =
-          wallet.account.address;
+        if(
+          wallet?.account?.address
+        ){
 
-        el.textContent =
-          a.slice(0,6) +
-          "..." +
-          a.slice(-6);
+          connectedWallet =
+            wallet.account.address;
 
-      }else{
 
-        connectedWallet = "";
+          const a =
+            wallet.account.address;
 
-        el.textContent =
-          "CONNECT WALLET";
+
+          if(el){
+
+            el.textContent =
+              a.slice(0,6) +
+              "..." +
+              a.slice(-6);
+
+          }
+
+        }else{
+
+          connectedWallet =
+            "";
+
+
+          if(el){
+
+            el.textContent =
+              "CONNECT WALLET";
+
+          }
+
+        }
+
       }
-    });
+    );
 
-  }catch(e){
 
-    console.error(e);
+  }catch(error){
+
+    console.error(
+      "TON Connect error",
+      error
+    );
+
   }
 }
-
-render();
-
-initTon();
-
-setInterval(
-  render,
-  1000
-);
 
 
 /* =========================
@@ -317,19 +675,27 @@ setInterval(
 ========================= */
 
 const withdrawModal =
-  document.createElement("div");
+  document.createElement(
+    "div"
+  );
+
 
 withdrawModal.id =
   "withdrawModal";
 
+
 withdrawModal.innerHTML = `
+
   <div class="withdraw-box">
 
-    <h2>Withdraw PERS</h2>
+    <h2>
+      Withdraw PERS
+    </h2>
 
     <p>
       Transfer Pool to Wallet
     </p>
+
 
     <div class="withdraw-info">
 
@@ -343,6 +709,7 @@ withdrawModal.innerHTML = `
 
     </div>
 
+
     <div class="withdraw-info">
 
       <span>
@@ -354,6 +721,7 @@ withdrawModal.innerHTML = `
       </b>
 
     </div>
+
 
     <div class="withdraw-info">
 
@@ -367,19 +735,26 @@ withdrawModal.innerHTML = `
 
     </div>
 
+
     <input
       id="withdrawAmount"
       type="number"
       placeholder="Amount PERS"
     >
 
+
     <div class="withdraw-actions">
 
-      <button id="withdrawCancel">
+      <button
+        id="withdrawCancel"
+      >
         CANCEL
       </button>
 
-      <button id="withdrawConfirm">
+
+      <button
+        id="withdrawConfirm"
+      >
         CONFIRM
       </button>
 
@@ -388,142 +763,239 @@ withdrawModal.innerHTML = `
   </div>
 `;
 
+
 document.body.appendChild(
   withdrawModal
 );
 
 
-/* OPEN WITHDRAW */
+/* =========================
+   OPEN WITHDRAW
+========================= */
 
-document.querySelector(
-  "#withdrawBtn"
-).onclick = ()=>{
-
-  accrue();
-
+const withdrawBtn =
   document.querySelector(
-    "#withdrawAvailable"
-  ).textContent =
-    fmt(state.saved) +
-    " PERS";
-
-  withdrawModal.style.display =
-    "flex";
-};
+    "#withdrawBtn"
+  );
 
 
-/* CANCEL */
+if(withdrawBtn){
 
-document.querySelector(
-  "#withdrawCancel"
-).onclick = ()=>{
+  withdrawBtn.onclick = ()=>{
 
-  withdrawModal.style.display =
-    "none";
-};
+    accrue();
 
 
-/* CONFIRM WITHDRAW */
-
-document.querySelector(
-  "#withdrawConfirm"
-).onclick = async ()=>{
-
-  const amount =
-    Number(
+    const available =
       document.querySelector(
-        "#withdrawAmount"
-      ).value
-    );
-
-  if(!amount || amount < 10){
-
-    alert(
-      "Minimum withdrawal is 10 PERS."
-    );
-
-    return;
-  }
-
-  accrue();
-
-  if(amount > state.saved){
-
-    alert(
-      "Insufficient PERS balance."
-    );
-
-    return;
-  }
-
-  if(!connectedWallet){
-
-    alert(
-      "Please connect your TON wallet first."
-    );
-
-    return;
-  }
-
-  try{
-
-    const response =
-      await fetch(
-        "https://persepolis.ahoon201.workers.dev/withdraw",
-        {
-          method:"POST",
-
-          headers:{
-            "Content-Type":
-              "application/json"
-          },
-
-          body:JSON.stringify({
-
-            amount:amount,
-
-            wallet:
-              connectedWallet,
-
-            telegramId:
-              tg?.initDataUnsafe?.user?.id ||
-              ""
-          })
-        }
+        "#withdrawAvailable"
       );
 
-    const result =
-      await response.json();
 
-    if(!result.ok){
+    if(available){
 
-      alert(
-        result.error ||
-        "Withdrawal failed."
-      );
+      available.textContent =
+        fmt(state.saved) +
+        " PERS";
 
-      return;
     }
 
-    alert(
-      `Withdrawal request received.\n\n` +
-      `${amount} PERS\n\n` +
-      `Status: Pending`
-    );
-
-    document.querySelector(
-      "#withdrawAmount"
-    ).value = "";
 
     withdrawModal.style.display =
-      "none";
+      "flex";
 
-  }catch(error){
+  };
 
-    console.error(error);
+}
 
-    alert(
-      "Connection error. Please try again."
-    );
-  }
-};
+
+/* =========================
+   CANCEL WITHDRAW
+========================= */
+
+const withdrawCancel =
+  document.querySelector(
+    "#withdrawCancel"
+  );
+
+
+if(withdrawCancel){
+
+  withdrawCancel.onclick =
+    ()=>{
+
+      withdrawModal.style.display =
+        "none";
+
+    };
+
+}
+
+
+/* =========================
+   CONFIRM WITHDRAW
+========================= */
+
+const withdrawConfirm =
+  document.querySelector(
+    "#withdrawConfirm"
+  );
+
+
+if(withdrawConfirm){
+
+  withdrawConfirm.onclick =
+    async ()=>{
+
+      const input =
+        document.querySelector(
+          "#withdrawAmount"
+        );
+
+
+      const amount =
+        Number(
+          input?.value || 0
+        );
+
+
+      if(
+        !amount ||
+        amount < 10
+      ){
+
+        alert(
+          "Minimum withdrawal is 10 PERS."
+        );
+
+        return;
+      }
+
+
+      accrue();
+
+
+      if(
+        amount >
+        state.saved
+      ){
+
+        alert(
+          "Insufficient PERS balance."
+        );
+
+        return;
+      }
+
+
+      if(!connectedWallet){
+
+        alert(
+          "Please connect your TON wallet first."
+        );
+
+        return;
+      }
+
+
+      try{
+
+        const response =
+          await fetch(
+            `${API}/withdraw`,
+            {
+              method:
+                "POST",
+
+              headers:{
+                "Content-Type":
+                  "application/json"
+              },
+
+              body:
+                JSON.stringify({
+
+                  amount:
+                    amount,
+
+                  wallet:
+                    connectedWallet,
+
+                  telegramId:
+                    tg?.initDataUnsafe?.user?.id ||
+                    ""
+
+                })
+
+            }
+          );
+
+
+        const result =
+          await response.json();
+
+
+        if(!result.ok){
+
+          alert(
+            result.error ||
+            "Withdrawal failed."
+          );
+
+          return;
+        }
+
+
+        alert(
+          `Withdrawal request received.\n\n` +
+          `${amount} PERS\n\n` +
+          `Status: Pending`
+        );
+
+
+        if(input)
+          input.value =
+            "";
+
+
+        withdrawModal.style.display =
+          "none";
+
+
+      }catch(error){
+
+        console.error(
+          error
+        );
+
+
+        alert(
+          "Connection error. Please try again."
+        );
+
+      }
+
+    };
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+render();
+
+initTon();
+
+loadLevels();
+
+
+/* =========================
+   LIVE MINING
+========================= */
+
+setInterval(
+  render,
+  1000
+);
