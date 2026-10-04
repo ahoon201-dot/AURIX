@@ -2,7 +2,9 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // Health check
+    // =========================
+    // HEALTH
+    // =========================
     if (url.pathname === "/health") {
       return new Response(
         JSON.stringify({
@@ -17,7 +19,9 @@ export default {
       );
     }
 
-    // Setup Telegram webhook
+    // =========================
+    // SETUP TELEGRAM WEBHOOK
+    // =========================
     if (url.pathname === "/setup-webhook") {
       const webhookUrl =
         "https://persepolis.ahoon201.workers.dev/telegram";
@@ -44,7 +48,86 @@ export default {
       });
     }
 
-    // Telegram webhook
+    // =========================
+    // WITHDRAW API
+    // =========================
+    if (url.pathname === "/withdraw" && request.method === "POST") {
+      try {
+        const body = await request.json();
+
+        const amount = Number(body.amount);
+        const wallet = String(body.wallet || "");
+        const telegramId = String(body.telegramId || "");
+
+        if (!amount || amount < 10) {
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              error: "Minimum withdrawal is 10 PERS"
+            }),
+            {
+              status: 400,
+              headers: {
+                "Content-Type": "application/json"
+              }
+            }
+          );
+        }
+
+        if (!wallet) {
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              error: "Wallet address is required"
+            }),
+            {
+              status: 400,
+              headers: {
+                "Content-Type": "application/json"
+              }
+            }
+          );
+        }
+
+        // مرحله فعلی:
+        // فقط درخواست برداشت را دریافت می‌کنیم.
+        // انتقال واقعی PERS در مرحله بعد اضافه می‌شود.
+
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            status: "pending",
+            amount: amount,
+            wallet: wallet,
+            telegramId: telegramId,
+            message: "Withdrawal request received."
+          }),
+          {
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        );
+
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error: "Invalid withdrawal request"
+          }),
+          {
+            status: 400,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        );
+      }
+    }
+
+    // =========================
+    // TELEGRAM WEBHOOK
+    // =========================
     if (url.pathname === "/telegram" && request.method === "POST") {
       try {
         const update = await request.json();
@@ -84,6 +167,7 @@ export default {
         }
 
         return new Response("OK");
+
       } catch (error) {
         return new Response("Webhook error", {
           status: 500
@@ -91,7 +175,9 @@ export default {
       }
     }
 
-    // Serve PERSEPOLIS Mini App
+    // =========================
+    // SERVE MINI APP
+    // =========================
     if (env.ASSETS) {
       return env.ASSETS.fetch(request);
     }
