@@ -1,29 +1,36 @@
-# PERSEPOLIS — AURIX Final UI Package
+# PERSEPOLIS — FINAL DESIGN MASTER PACKAGE
 
-This package is the consolidated PERSEPOLIS frontend/backend replacement for the current AURIX repository.
+این بسته برای جایگزینی نسخه فعلی AURIX آماده شده است.
 
-## Replace these files
-- index.html
-- style.css
-- app.js
-- worker.js
-- schema.sql
+## فایل‌هایی که باید در GitHub جایگزین شوند
+- `index.html`
+- `style.css`
+- `app.js`
+- `worker.js`
+- `schema.sql`
 
-Keep the existing project assets:
-- PERS_logo_final.png
-- persepolis-bg.png
-- tonconnect-manifest.json
-- server.js
-- admin.html
-- wrangler.jsonc
+فایل‌های موجود پروژه را نگه دار:
+- `PERS_logo_final.png`
+- `persepolis-bg.png`
+- `tonconnect-manifest.json`
+- `server.js`
+- `admin.html`
+- `wrangler.jsonc`
 
-## Important
-The UI is built around the supplied PERSEPOLIS Design Master: Home, Upgrade, Daily Tasks, Friends, Wallet/Buy-Sell, Leaderboard and Profile.
+## طراحی
+Home بر اساس Design Master تأییدشده بازطراحی شده:
+- Saved Tokens
+- Live Mined
+- Energy Ring
+- Mining Rate
+- Start/Stop Mining
+- Claim PERS
+- سه Boost
+- Level / Progress / Upgrade
+- Bottom navigation
+- تم مشکی/آبی بسیار تیره + قرمز + طلایی با حال‌وهوای تخت جمشید
 
-The backend keeps mining/claim/level/referral state server-authoritative and validates Telegram init data before protected API operations.
+## نکته مهم
+این بسته عمداً Swap واقعی را فعال نمی‌کند تا مسیر نقدینگی PERS روی TON به‌صورت واقعی و قابل‌تأیید بررسی شود.
 
-### TON swaps
-The UI is ready for a real TON swap integration, but the swap transaction itself must not be hard-coded against an unverified pool. Before enabling live Buy/Sell, verify the PERS Jetton master and the current GRAM-PERS/DeDust route on mainnet, then configure the verified route in the deployment. Never send funds to an address copied from a mock screen.
-
-### Withdrawals
-Withdrawals are recorded as pending requests. A treasury/admin signer must execute the actual PERS Jetton transfer after reviewing the request. This package does not embed a private key or custodial signing secret in the browser.
+Mining / Claim / Level / Referral / Withdrawal از API فعلی پروژه استفاده می‌کنند.

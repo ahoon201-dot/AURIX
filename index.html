@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#050403">
+<meta name="theme-color" content="#05070b">
 <title>PERSEPOLIS</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
@@ -12,30 +12,66 @@
 <body>
 <div class="app" id="app">
   <header class="topbar">
-    <div class="brand"><strong>PERSEPOLIS</strong><small>MINE · BUILD · EARN</small></div>
+    <div class="brand">
+      <div class="brand-mark">𓂀</div>
+      <div><strong>PERSEPOLIS</strong><small>MINE · BUILD · EARN</small></div>
+    </div>
     <div id="ton-connect" class="ton-connect"></div>
   </header>
 
   <main class="content">
     <section class="screen active" id="screen-home">
-      <div class="hero-home">
-        <div class="hero-user">
-          <div class="avatar"><img src="PERS_logo_final.png" alt="PERS"></div>
-          <div class="user-copy">
-            <b id="homeName">Miner ✓</b>
-            <div><span class="level-badge">LVL <i id="homeLevel">1</i></span><span class="ready"><i></i><em id="homeStatus">READY</em></span></div>
-            <small><b id="homeNextHold">0</b> PERS left to LVL UP</small>
+      <div class="home-shell">
+        <div class="home-top">
+          <div class="hero-user">
+            <div class="avatar"><img src="PERS_logo_final.png" alt="PERS"></div>
+            <div class="user-copy">
+              <b id="homeName">Miner ✓</b>
+              <div><span class="level-badge">LVL <i id="homeLevel">1</i></span><span class="ready"><i></i><em id="homeStatus">READY</em></span></div>
+              <small><b id="homeNextHold">15,000</b> PERS to next level</small>
+            </div>
+          </div>
+          <div class="wallet-mini" id="walletChip">CONNECT WALLET</div>
+        </div>
+
+        <div class="saved-card">
+          <div class="saved-label">SAVED TOKENS</div>
+          <div class="saved-number"><b id="saved">0.00</b> <span>PERS</span></div>
+          <div class="live-pill"><span>LIVE MINED</span><b>+<strong id="mined">0.00</strong> PERS</b></div>
+        </div>
+
+        <div class="energy-panel">
+          <div class="energy-ring" id="energyRing">
+            <div class="energy-core">
+              <div class="bolt">ϟ</div>
+              <strong id="energyBig">150</strong><span>/ 200</span>
+              <small>ENERGY</small>
+            </div>
+          </div>
+          <div class="rate-line"><span>⚡ <b id="homeRate">125.60</b> PERS / HOUR</span><span class="dot">•</span><span id="mineTimer">07:58:24</span></div>
+          <div class="timer-label">UNTIL ENERGY FULL</div>
+          <button class="mine-cta" id="mineBtn"><span class="cta-icon">ϟ</span><span>START MINING</span></button>
+          <button class="claim-cta" id="claimBtn">CLAIM <b>PERS</b></button>
+        </div>
+
+        <div class="boost-section">
+          <div class="section-title"><span>BOOST</span><small>POWER UP YOUR MINING</small></div>
+          <div class="boost-grid">
+            <button class="boost-card" data-boost="speed"><div class="boost-icon">×2</div><b>Speed</b><small>1 HOUR</small></button>
+            <button class="boost-card" data-boost="energy"><div class="boost-icon">ϟ</div><b>Energy</b><small>+50 · 1H</small></button>
+            <button class="boost-card" data-boost="auto"><div class="boost-icon">∞</div><b>Auto</b><small>12 HOURS</small></button>
           </div>
         </div>
-        <div class="wallet-mini" id="walletChip">CONNECT WALLET</div>
-        <div class="saved-caption">S A V E D&nbsp; T O K E N S</div>
-        <div class="saved-value"><b id="saved">0.0000</b> <span>PERS</span></div>
-        <div class="live-value"><b>+</b><strong id="mined">0.0000</strong><span>PERS</span></div>
-        <div class="coin-wrap"><div class="coin"><img src="PERS_logo_final.png" alt="PERS"><span>PERS</span></div></div>
-        <div class="rate">⚡ <b id="homeRate">1.00</b> PERS / HOUR</div>
-        <div class="session"><strong id="mineTimer">00:00:00</strong><small>SESSION / MAX 8H</small></div>
-        <button class="primary big" id="claimBtn">CLAIM</button>
-        <button class="secondary big" id="mineBtn">START MINING</button>
+
+        <div class="level-card">
+          <div class="level-row">
+            <div><span class="level-kicker">CURRENT LEVEL</span><strong>LEVEL <b id="homeLevel2">1</b></strong></div>
+            <div class="level-rate"><span>MINING RATE</span><b id="homeRate2">125.60</b><small>PERS / HOUR</small></div>
+          </div>
+          <div class="progress-track"><i id="levelProgress"></i></div>
+          <div class="level-foot"><span><b id="levelBalance">0</b> PERS</span><span>NEXT: <b id="levelTarget">15,000</b> PERS</span></div>
+          <button class="upgrade-home" id="masterUpgrade">UPGRADE LEVEL</button>
+        </div>
       </div>
     </section>
 
@@ -44,7 +80,7 @@
       <div class="upgrade-card">
         <div class="upgrade-grid"><div><small>WALLET PERS</small><b id="walletPers">0.0000</b></div><div><small>ENERGY</small><b id="energy">200 / 200</b></div></div>
         <button class="primary big" id="upgradeBtn">UPGRADE TO LEVEL 2</button>
-        <p>Holding requirement is checked against the connected wallet. PERS is not spent when upgrading.</p>
+        <p>Holding requirement is checked against the connected TON wallet. PERS is not spent when upgrading.</p>
       </div>
       <div class="section-label">LEVEL REWARDS</div>
       <div class="reward-list" id="levelMilestones"></div>
@@ -73,11 +109,11 @@
       <div class="token-row"><span>TON</span><b id="walletTon">CONNECT WALLET</b></div>
       <div class="trade-card">
         <div class="trade-tabs"><button id="tradeBuy" class="active">Buy</button><button id="tradeSell">Sell</button></div>
-        <div class="trade-title"><h2 id="tradeTitle">BUY PERS</h2><span id="tradeRate">1 PERS ≈ 0.00001 TON</span></div>
+        <div class="trade-title"><h2 id="tradeTitle">BUY PERS</h2><span id="tradeRate">Route not enabled</span></div>
         <label>You Pay<input id="payInput" inputmode="decimal" type="number" min="0" step="any" value="10"></label>
-        <label>You Receive<input id="receiveInput" readonly value="1,000,000"></label>
+        <label>You Receive<input id="receiveInput" readonly value="—"></label>
         <button class="primary big" id="tradeAction">BUY PERS</button>
-        <small id="tradeNote">Swap uses the verified TON routing path configured for this project.</small>
+        <small id="tradeNote">Live swaps stay disabled until the verified PERS liquidity route is configured.</small>
       </div>
     </section>
 
