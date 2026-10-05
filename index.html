@@ -20,5 +20,5 @@ async function upgrade(){try{let j=await api("/api/level/upgrade");state={...sta
 async function task(){try{let j=await api("/api/tasks/claim",{taskId:"daily"});state={...state,...j.state};note("Reward claimed");render()}catch(e){note(e.message)}}
 async function wallet(){let w=prompt("TON wallet address");if(!w)return;try{let j=await api("/api/wallet/bind",{wallet:w});state={...state,...j.state};note("Wallet connected");render()}catch(e){note(e.message)}}
 function invite(){let id=tg?.initDataUnsafe?.user?.id;if(!id)return note("Telegram user is required");navigator.clipboard?.writeText("https://t.me/PERSEPOLIS_BOT?start=ref_"+id);note("Referral link copied")}
-refresh();setInterval(refresh,15000);
+render();refresh();setInterval(refresh,15000);
 </script></body></html>
