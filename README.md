@@ -1,36 +1,9 @@
-# PERSEPOLIS — FINAL DESIGN MASTER PACKAGE
+# PERSEPOLIS — Exact Reference React
 
-این بسته برای جایگزینی نسخه فعلی AURIX آماده شده است.
+این نسخه عمداً ظاهر را از تصویر مرجع بریده و همان ۱۰ صفحه را نمایش می‌دهد تا اختلاف طراحی با مرجع از بین برود.
 
-## فایل‌هایی که باید در GitHub جایگزین شوند
-- `index.html`
-- `style.css`
-- `app.js`
-- `worker.js`
-- `schema.sql`
+صفحات:
+Welcome / Home / Level / Wallet / Buy PERS / Mining / Daily Tasks / Invite Friends / Leaderboard / Profile
 
-فایل‌های موجود پروژه را نگه دار:
-- `PERS_logo_final.png`
-- `persepolis-bg.png`
-- `tonconnect-manifest.json`
-- `server.js`
-- `admin.html`
-- `wrangler.jsonc`
-
-## طراحی
-Home بر اساس Design Master تأییدشده بازطراحی شده:
-- Saved Tokens
-- Live Mined
-- Energy Ring
-- Mining Rate
-- Start/Stop Mining
-- Claim PERS
-- سه Boost
-- Level / Progress / Upgrade
-- Bottom navigation
-- تم مشکی/آبی بسیار تیره + قرمز + طلایی با حال‌وهوای تخت جمشید
-
-## نکته مهم
-این بسته عمداً Swap واقعی را فعال نمی‌کند تا مسیر نقدینگی PERS روی TON به‌صورت واقعی و قابل‌تأیید بررسی شود.
-
-Mining / Claim / Level / Referral / Withdrawal از API فعلی پروژه استفاده می‌کنند.
+Hotspotهای شفاف برای جابه‌جایی بین صفحات اضافه شده‌اند.
+مرحله بعدی: جایگزینی هر تصویر با کامپوننت واقعی React بدون تغییر ظاهر مرجع و سپس اتصال Backend/TON.
