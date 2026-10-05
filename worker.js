@@ -1,130 +1,77 @@
-const DB = "PERSEPOLIS_DB";
-const MAX_ENERGY = 200;
-const MAX_LEVEL = 400;
+const PERS_MASTER="EQBxwHlh-mqsszryIRQeFpvaG91EqS3HWtiQo4h2-UzYlBAX";
+const REF_REWARD=5000;
+const LEVELS=Array.from({length:400},(_,i)=>({level:i+1,hold:i===0?0:Math.round(100+Math.pow(i/399,1.42)*149900),speed:i===11?125.6:i===399?500:+(1+(i/399)*499).toFixed(2)}));
+LEVELS[11]={level:12,hold:15000,speed:125.6};
 
-function json(data, status=200){
-  return new Response(JSON.stringify(data), {
-    status, headers: {"content-type":"application/json; charset=utf-8","access-control-allow-origin":"*","access-control-allow-headers":"content-type,x-telegram-init-data","access-control-allow-methods":"GET,POST,OPTIONS"}
-  });
+async function hmac(key,data){return crypto.subtle.sign("HMAC",key,new TextEncoder().encode(data))}
+async function hex(buf){return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+async function telegramUser(initData,botToken){
+ const p=new URLSearchParams(initData||"");const hash=p.get("hash");if(!hash)throw Error("Missing Telegram initData");
+ p.delete("hash");const data=[...p.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>`${k}=${v}`).join("\n");
+ const secret=await crypto.subtle.importKey("raw",new TextEncoder().encode("WebAppData"),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+ const secretBytes=await hmac(secret,botToken);
+ const key=await crypto.subtle.importKey("raw",secretBytes,{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+ if(await hex(await hmac(key,data))!==hash)throw Error("Invalid Telegram initData");
+ return JSON.parse(p.get("user")||"{}");
 }
-function cors(){ return new Response(null,{status:204,headers:{
-  "access-control-allow-origin":"*","access-control-allow-headers":"content-type,x-telegram-init-data","access-control-allow-methods":"GET,POST,OPTIONS"
-}}); }
-
-async function hmac(keyBytes, data){
-  const key = await crypto.subtle.importKey("raw", keyBytes, {name:"HMAC",hash:"SHA-256"}, false, ["sign"]);
-  return new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data)));
+function json(x,s=200){return new Response(JSON.stringify(x),{status:s,headers:{"content-type":"application/json","access-control-allow-origin":"*"}})}
+async function user(env,u){
+ let x=await env.DB.prepare("SELECT * FROM users WHERE id=?").bind(u.id).first();
+ if(!x){let now=Math.floor(Date.now()/1000);await env.DB.prepare("INSERT INTO users(id,username,created_at,last_mine_at) VALUES(?,?,?,?)").bind(u.id,u.username||u.first_name||"",now,now).run();x=await env.DB.prepare("SELECT * FROM users WHERE id=?").bind(u.id).first()}
+ return x
 }
-function hex(a){ return [...a].map(x=>x.toString(16).padStart(2,"0")).join(""); }
-
-async function telegramUser(env, initData){
-  if(!initData) return null;
-  const p = new URLSearchParams(initData);
-  const hash = p.get("hash");
-  if(!hash) return null;
-  p.delete("hash");
-  const dataCheck = [...p.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>`${k}=${v}`).join("\n");
-  const botToken = env.BOT_TOKEN;
-  if(!botToken) return null;
-  const secret = await hmac(new TextEncoder().encode("WebAppData"), botToken);
-  const calc = hex(await hmac(secret, dataCheck));
-  if(calc !== hash) return null;
-  const user = p.get("user");
-  try { return user ? JSON.parse(user) : null; } catch { return null; }
+function accrue(x){
+ if(!x.mining)return {...x,earned:0};
+ const now=Math.floor(Date.now()/1000),dt=Math.max(0,now-(x.last_mine_at||now)),l=LEVELS[x.level-1];
+ const earned=Math.min(Number(x.energy),dt*l.speed/3600);
+ return {...x,earned};
 }
-
-function levelInfo(level){
-  const l = Math.max(1,Math.min(MAX_LEVEL,Number(level)||1));
-  const t=(l-1)/(MAX_LEVEL-1);
-  let hold=l===1?0:Math.round(100+Math.pow(t,1.42)*149900);
-  let speed=l<=12?1+((l-1)/11)*124.6:125.6+Math.pow((l-12)/388,1.15)*374.4;
-  if(l===12){hold=15000;speed=125.6}
-  if(l===400){hold=150000;speed=500}
-  return {level:l,hold,speed:Number(speed.toFixed(2))};
+function state(x){return {level:x.level,balance:Number(x.balance),mined:Number(x.mined),energy:Number(x.energy),mining:!!x.mining,wallet:x.wallet||"",referrals:x.referrals||0,earned:Number(x.referral_earned||0)}}
+async function saveAccrued(env,x){
+ const a=accrue(x); if(!a.earned)return x;
+ const energy=Math.max(0,x.energy-a.earned), mined=x.mined+a.earned;
+ await env.DB.prepare("UPDATE users SET mined=?,energy=?,last_mine_at=? WHERE id=?").bind(mined,energy,Math.floor(Date.now()/1000),x.id).run();
+ return {...x,mined,energy,last_mine_at:Math.floor(Date.now()/1000)};
 }
-
-async function getUser(env,id){
-  const k=`u:${id}`;
-  let u=await env.DB.get(k,"json");
-  if(!u){
-    u={id,level:1,balance:0,mined:0,energy:MAX_ENERGY,mining:false,lastMineAt:null,
-       referrals:0,referralEarned:0,wallet:null,createdAt:Date.now(),tasks:{}};
-    await env.DB.put(k,JSON.stringify(u));
-  }
-  return u;
+async function bot(env,method,body){
+ return fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/${method}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)})
 }
-async function saveUser(env,u){ await env.DB.put(`u:${u.id}`,JSON.stringify(u)); }
-
-function accrue(u){
-  if(!u.mining || !u.lastMineAt) return 0;
-  const sec=Math.max(0,(Date.now()-u.lastMineAt)/1000);
-  const rate=levelInfo(u.level).speed/3600;
-  const earned=Math.min(u.energy, sec*rate);
-  if(earned>0){u.balance+=earned;u.mined+=earned;u.energy=Math.max(0,u.energy-earned);u.lastMineAt=Date.now();}
-  return earned;
-}
-
-async function auth(req,env){
-  const init=req.headers.get("x-telegram-init-data") || "";
-  const user=await telegramUser(env,init);
-  if(!user) return null;
-  const u=await getUser(env,String(user.id));
-  u.telegram=user;
-  accrue(u);
-  await saveUser(env,u);
-  return u;
-}
-
-export default {
-  async fetch(req,env){
-    if(req.method==="OPTIONS") return cors();
-    const url=new URL(req.url);
-    if(url.pathname==="/health") return json({ok:true,app:"PERSEPOLIS"});
-    if(url.pathname==="/tonconnect-manifest.json")
-      return json({url:"https://YOUR-DOMAIN.example",name:"PERSEPOLIS",iconUrl:"https://YOUR-DOMAIN.example/icon.png"});
-    if(!url.pathname.startsWith("/api/")) return new Response("PERSEPOLIS API",{status:200});
-
-    if(url.pathname==="/api/bootstrap" && req.method==="POST"){
-      const u=await auth(req,env); if(!u) return json({error:"INVALID_TELEGRAM_INIT_DATA"},401);
-      return json({state:u,level:levelInfo(u.level)});
-    }
-    if(url.pathname==="/api/mine/start" && req.method==="POST"){
-      const u=await auth(req,env); if(!u) return json({error:"UNAUTHORIZED"},401);
-      if(u.energy<=0) return json({error:"NO_ENERGY"},400);
-      u.mining=true;u.lastMineAt=Date.now();await saveUser(env,u);return json({ok:true,state:u});
-    }
-    if(url.pathname==="/api/mine/stop" && req.method==="POST"){
-      const u=await auth(req,env); if(!u) return json({error:"UNAUTHORIZED"},401);
-      u.mining=false;await saveUser(env,u);return json({ok:true,state:u});
-    }
-    if(url.pathname==="/api/mine/claim" && req.method==="POST"){
-      const u=await auth(req,env); if(!u) return json({error:"UNAUTHORIZED"},401);
-      u.mining=false;await saveUser(env,u);return json({ok:true,state:u,claimed:true});
-    }
-    if(url.pathname==="/api/level/upgrade" && req.method==="POST"){
-      const u=await auth(req,env); if(!u) return json({error:"UNAUTHORIZED"},401);
-      const next=u.level+1, info=levelInfo(next);
-      if(next>MAX_LEVEL) return json({error:"MAX_LEVEL"},400);
-      if(u.balance<info.hold) return json({error:"INSUFFICIENT_PERS",required:info.hold,balance:u.balance},400);
-      u.balance-=info.hold;u.level=next;await saveUser(env,u);
-      return json({ok:true,state:u,level:info});
-    }
-    if(url.pathname==="/api/wallet/bind" && req.method==="POST"){
-      const u=await auth(req,env); if(!u) return json({error:"UNAUTHORIZED"},401);
-      const b=await req.json().catch(()=>({}));
-      if(!/^EQ|^UQ/.test(String(b.wallet||""))) return json({error:"INVALID_WALLET"},400);
-      u.wallet=String(b.wallet);await saveUser(env,u);return json({ok:true,state:u});
-    }
-    if(url.pathname==="/api/tasks/claim" && req.method==="POST"){
-      const u=await auth(req,env); if(!u) return json({error:"UNAUTHORIZED"},401);
-      const b=await req.json().catch(()=>({})), task=String(b.task||"");
-      const rewards={daily:500,telegram:1000,x:1000,invite3:5000,video:1000,swap:2000};
-      if(!(task in rewards)) return json({error:"TASK_NOT_FOUND"},404);
-      const key=`${task}:${new Date().toISOString().slice(0,10)}`;
-      if(u.tasks[key]) return json({error:"ALREADY_CLAIMED"},400);
-      u.tasks[key]=true;u.balance+=rewards[task];await saveUser(env,u);
-      return json({ok:true,reward:rewards[task],state:u});
-    }
-    return json({error:"NOT_FOUND"},404);
-  }
-};
+export default {async fetch(req,env){
+ const url=new URL(req.url);
+ if(req.method==="OPTIONS")return new Response("",{headers:{"access-control-allow-origin":"*","access-control-allow-headers":"content-type,x-telegram-init-data","access-control-allow-methods":"GET,POST,OPTIONS"}});
+ if(url.pathname==="/health")return json({ok:true,service:"PERSEPOLIS"});
+ if(url.pathname==="/")return new Response(await (await fetch(new URL("/index.html",req.url))).text(),{headers:{"content-type":"text/html;charset=utf-8"}});
+ if(url.pathname==="/telegram/webhook"&&req.method==="POST"){
+   const update=await req.json();const m=update.message;
+   if(m?.text?.startsWith("/start")){
+     const parts=m.text.split(" ");const ref=parts[1]?.startsWith("ref_")?parts[1].slice(4):null;
+     if(ref)await env.DB.prepare("INSERT OR IGNORE INTO referrals(inviter_id,invitee_id,created_at) VALUES(?,?,?)").bind(Number(ref),m.from.id,Math.floor(Date.now()/1000)).run();
+     const keyboard={inline_keyboard:[[{text:"🏛 Open PERSEPOLIS",web_app:{url:env.WEBAPP_URL}}]]};
+     await bot(env,"sendMessage",{chat_id:m.chat.id,text:"🏛 PERSEPOLIS\\nMine • Build • Earn\\n\\nOpen the game:",reply_markup:keyboard});
+   }
+   return json({ok:true});
+ }
+ let u;try{u=await telegramUser(req.headers.get("X-Telegram-Init-Data")||"",env.BOT_TOKEN)}catch(e){return json({ok:false,error:e.message},401)}
+ let x=await user(env,u);x=await saveAccrued(env,x);
+ if(url.pathname==="/api/bootstrap"){return json({ok:true,state:state(x)})}
+ if(req.method!=="POST")return json({ok:false,error:"Method not allowed"},405);
+ const body=await req.json().catch(()=>({}));
+ if(url.pathname==="/api/mine/start"){await env.DB.prepare("UPDATE users SET mining=1,last_mine_at=? WHERE id=?").bind(Math.floor(Date.now()/1000),u.id).run();return json({ok:true,state:state({...x,mining:1})})}
+ if(url.pathname==="/api/mine/stop"){await env.DB.prepare("UPDATE users SET mining=0 WHERE id=?").bind(u.id).run();return json({ok:true,state:state({...x,mining:0})})}
+ if(url.pathname==="/api/mine/claim"){let amount=x.mined;await env.DB.prepare("UPDATE users SET balance=balance+?,mined=0 WHERE id=?").bind(amount,u.id).run();return json({ok:true,claimed:amount,state:state({...x,balance:x.balance+amount,mined:0})})}
+ if(url.pathname==="/api/level/upgrade"){
+   const next=LEVELS[x.level];if(!next)return json({ok:false,error:"Maximum level"},400);
+   if(x.balance<next.hold)return json({ok:false,error:`Need ${next.hold} PERS`},400);
+   await env.DB.prepare("UPDATE users SET level=?,balance=balance-?,mining=0 WHERE id=?").bind(next.level,next.hold,u.id).run();
+   return json({ok:true,state:state({...x,level:next.level,balance:x.balance-next.hold,mining:0})});
+ }
+ if(url.pathname==="/api/wallet/bind"){const w=String(body.wallet||"");if(!/^[EU]Q[A-Za-z0-9_-]{46}$/.test(w))return json({ok:false,error:"Invalid TON wallet address"},400);await env.DB.prepare("UPDATE users SET wallet=? WHERE id=?").bind(w,u.id).run();return json({ok:true,state:state({...x,wallet:w})})}
+ if(url.pathname==="/api/tasks/claim"){
+   const id=String(body.taskId||"");const rewards={daily:500,telegram:1000,x:1000,invite:5000,video:1000,swap:2000};if(!(id in rewards))return json({ok:false,error:"Unknown task"},400);
+   if(id==="invite"&&x.referrals<3)return json({ok:false,error:"Invite 3 friends first"},400);
+   try{await env.DB.prepare("INSERT INTO task_claims(user_id,task_id,claimed_at) VALUES(?,?,?)").bind(u.id,id,Math.floor(Date.now()/1000)).run()}catch{return json({ok:false,error:"Already claimed"},400)}
+   await env.DB.prepare("UPDATE users SET balance=balance+? WHERE id=?").bind(rewards[id],u.id).run();
+   return json({ok:true,reward:rewards[id],state:state({...x,balance:x.balance+rewards[id]})});
+ }
+ return json({ok:false,error:"Not found"},404);
+}}

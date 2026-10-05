@@ -1,22 +1,32 @@
-# PERSEPOLIS — 10 Screen Real Game
+# PERSEPOLIS — complete Telegram game
 
-این نسخه همان ۱۰ صفحه مرجع را به یک بازی React واقعی تبدیل می‌کند.
+This is a real Telegram Mini App project, not a screenshot viewer.
 
-## اجرا
-npm install
-npm run dev
+## What is included
+- PERSEPOLIS branded game UI
+- Telegram Mini App launch
+- Telegram initData verification
+- Server-authoritative mining
+- Energy and mining timer
+- 400 levels
+- Level upgrades paid from the user's in-app PERS balance
+- Daily/task rewards with one-time DB claims
+- Referral tracking
+- TON wallet binding
+- Buy/Sell UI intentionally disabled until a verified DEX route is configured
+- Cloudflare D1 schema
+- Telegram bot `/start` flow with a Mini App button
 
-## امکانات واقعی داخل Frontend
-- 10 صفحه و navigation
-- Level 1 تا 400 با فرمول واحد
-- Mining با نرخ واقعی بر اساس Level
-- Energy
-- Balance
-- Upgrade با کسر PERS از موجودی کاربر
-- Tasks و reward
-- Referral link
-- Wallet binding field
-- Telegram WebApp آماده
+## Deploy
+1. Create a Cloudflare D1 database and run `worker/schema.sql`.
+2. Deploy `worker/worker.js` and serve `web/index.html` as a Worker static asset (or Cloudflare Pages).
+3. Set Worker secrets:
+   - `BOT_TOKEN` = token from @BotFather
+4. Set Worker environment variable:
+   - `WEBAPP_URL` = public HTTPS URL of the Mini App.
+5. Register webhook:
+   `POST https://api.telegram.org/bot<BOT_TOKEN>/setWebhook?url=https://YOUR_DOMAIN/telegram/webhook`
+6. Open the bot and send `/start`.
 
-## نکته
-برای موجودی on-chain و Buy/Sell واقعی باید backend و مسیر تأییدشده PERS/TON وصل شود. این نسخه قیمت یا تراکنش جعلی ایجاد نمی‌کند.
+## Important
+I did not fake token swaps. Real PERS buy/sell needs a verified TON DEX/pool route and must be wired before enabling the buttons.
