@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#080604">
-<title>PERSEPOLIS</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#070504">
+<title>PERSEPOLIS — Mining Network</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 <link rel="stylesheet" href="style.css">
@@ -12,75 +12,137 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand"><b>PERSEPOLIS</b><span>MINING NETWORK</span></div>
+    <div class="brand"><b>PERSEPOLIS</b><span>MINE · BUILD · EARN</span></div>
     <div id="ton-connect"></div>
   </header>
 
   <main>
-    <section class="hero" id="mine">
-      <div class="profile-row">
-        <div class="profile-mini">
-          <div class="mini-avatar"><img src="PERS_logo_final.png" alt="PERS"></div>
-          <div>
-            <div class="name" id="name">Miner <span>✓</span></div>
-            <div class="badges"><b>LVL <i id="level">1</i></b><strong><em></em> READY</strong></div>
-            <div class="level-up"><span id="nextCost">100</span> PERS left to LVL UP</div>
+    <section class="screen active" id="screen-home">
+      <div class="hero">
+        <div class="profile-row">
+          <div class="profile-mini" role="button" aria-label="Open profile">
+            <div class="mini-avatar"><img src="PERS_logo_final.png" alt="PERS"></div>
+            <div>
+              <div class="name" id="userName">Miner <span>✓</span></div>
+              <div class="badges"><b>LVL <i id="level">1</i></b><strong><em></em><span id="miningState">READY</span></strong></div>
+              <div class="level-up"><span id="nextHold">0</span> PERS left to LVL UP</div>
+            </div>
           </div>
+          <div class="wallet-chip" id="walletChip">CONNECT WALLET</div>
         </div>
-        <div class="wallet-chip" id="walletAddress">CONNECT WALLET</div>
-      </div>
 
-      <div class="saved-title">SAVED TOKENS</div>
-      <div class="saved-balance"><span id="saved">0.0000</span> <b>PERS</b></div>
+        <div class="saved-title">SAVED TOKENS</div>
+        <div class="saved-balance"><span id="saved">0.0000</span> <b>PERS</b></div>
+        <div class="earned"><span>+</span><strong id="mined">0.0000</strong><small>PERS</small></div>
 
-      <div class="earned"><span>+</span><strong id="earned">0.0000</strong> <small>PERS</small></div>
-
-      <div class="coin-wrap">
-        <div class="coin">
-          <div class="coin-inner">
-            <img src="PERS_logo_final.png" alt="PERSEPOLIS PERS">
-            <span>PERS</span>
-          </div>
+        <div class="coin-wrap">
+          <div class="coin"><div class="coin-inner"><img src="PERS_logo_final.png" alt=""><span>PERS</span></div></div>
         </div>
+
+        <div class="speed-line">⚡ <b id="speed">1.00</b> PERS / HOUR</div>
+        <div class="timer"><span id="mineTimer">00:00:00</span><small>SESSION / MAX 8H</small></div>
+
+        <button class="claim" id="claimBtn">CLAIM</button>
+        <button class="secondary" id="mineBtn">START MINING</button>
       </div>
-
-      <div class="speed-line">⚡ <b id="speed">1.00</b> PERS / HOUR</div>
-      <button class="claim" id="claim">CLAIM</button> <button class="withdraw-btn" id="withdrawBtn">WITHDRAW PERS</button>
     </section>
 
-    <section class="panel" id="tasks">
-      <h2>TASKS</h2>
-      <div class="task">🎁 Daily check-in <button data-reward="10">+10 PERS</button></div>
-      <div class="task">📣 Follow community <button data-reward="25">+25 PERS</button></div>
-      <div class="task">👥 Invite a friend <button data-reward="50">+50 PERS</button></div>
+    <section class="screen" id="screen-tasks">
+      <div class="section-head"><h2>DAILY TASKS</h2><span>REWARDS</span></div>
+      <div id="taskList"></div>
     </section>
 
-    <section class="panel" id="miners">
-      <h2>MINERS</h2>
-      <div class="buy-note"><b>MORE MINING POWER?</b><span>Use your saved PERS to unlock higher mining levels.</span></div>
-      <div class="miner-grid" id="minerGrid"></div>
+    <section class="screen" id="screen-upgrade">
+      <div class="section-head"><h2>LEVEL 1 — 400</h2><span id="levelLabel">LEVEL 1</span></div>
+      <div class="upgrade-card">
+        <div class="upgrade-top"><b>LEVEL <span id="upgradeLevel">1</span></b><span>400 MAX</span></div>
+        <div class="progress"><i id="progress"></i></div>
+        <div class="upgrade-grid">
+          <div><small>MINING SPEED</small><b id="upgradeSpeed">1.00 PERS/h</b></div>
+          <div><small>REQUIRED HOLD</small><b id="upgradeHold">0 PERS</b></div>
+          <div><small>WALLET PERS</small><b id="walletPers">0.0000</b></div>
+          <div><small>ENERGY</small><b id="energy">200 / 200</b></div>
+        </div>
+        <button class="claim" id="upgradeBtn">UPGRADE TO NEXT LEVEL</button>
+        <p>Holding requirement is checked against the connected wallet. PERS is not spent when upgrading.</p>
+      </div>
+      <div class="level-rewards">
+        <h3>LEVEL REWARDS</h3>
+        <div id="levelMilestones"></div>
+      </div>
     </section>
 
-    <section class="panel" id="friends">
-      <h2>FRIENDS</h2>
-      <div class="box"><b>Invite friends</b><p>Share your referral link and grow your mining network.</p><button id="share2">INVITE FRIENDS</button></div>
+    <section class="screen" id="screen-friends">
+      <div class="section-head"><h2>INVITE FRIENDS</h2><span id="refCount">0 ACTIVE</span></div>
+      <div class="invite-card">
+        <div class="temple">𓂀</div>
+        <h3>BUILD THE NETWORK</h3>
+        <p>Invite friends to PERSEPOLIS and earn referral rewards.</p>
+        <div class="ref-grid"><div><b id="invited">0</b><small>INVITED</small></div><div><b id="refEarned">0</b><small>EARNED PERS</small></div></div>
+        <div class="ref-link" id="refLink">Loading referral link…</div>
+        <button id="shareBtn">INVITE FRIENDS</button>
+      </div>
+      <div class="ref-levels">
+        <div><b>1</b><span>FRIEND</span><strong>+5,000 PERS</strong></div>
+        <div><b>3</b><span>FRIENDS</span><strong>+15,000 PERS</strong></div>
+        <div><b>10</b><span>FRIENDS</span><strong>+50,000 PERS</strong></div>
+      </div>
     </section>
 
-    <section class="panel" id="profile">
-      <h2>PROFILE</h2>
-      <div class="box profile"><div class="avatar">P</div><div><b id="name2">Miner</b><small id="uid">Telegram user</small></div></div>
-      <div class="box contract"><small>PERS JETTON MASTER</small><code>EQBxwHlh-mqsszryIRQeFpvaG91EqS3HWtiQo4h2-UzYlBAX</code></div>
+    <section class="screen" id="screen-wallet">
+      <div class="section-head"><h2>WALLET</h2><span>TON NETWORK</span></div>
+      <div class="wallet-card">
+        <small>TOTAL PERS</small><strong id="walletTotal">0.0000 PERS</strong>
+        <div class="wallet-actions"><button id="buyBtn">BUY</button><button id="sellBtn">SELL</button><button id="sendBtn">SEND</button><button id="receiveBtn">RECEIVE</button></div>
+      </div>
+      <div class="token-row"><span>PERS</span><b id="walletPers2">0.0000</b></div>
+      <div class="token-row"><span>TON</span><b id="walletTon">CONNECTED WALLET</b></div>
+      <div class="trade-card" id="tradeCard">
+        <div class="trade-head"><b id="tradeTitle">BUY PERS</b><span>1 PERS ≈ 0.00001 TON</span></div>
+        <label>You Pay<input id="payInput" type="number" min="0" step="any" value="10"></label>
+        <label>You Receive<input id="receiveInput" type="text" value="1,000,000" readonly></label>
+        <button id="tradeAction">BUY PERS</button>
+        <small>Real swap execution stays disabled until the existing GRAM-PERS LP is verified.</small>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-profile">
+      <div class="section-head"><h2>PROFILE</h2><span id="profileLevel">LEVEL 1</span></div>
+      <div class="profile-card"><div class="avatar">P</div><div><b id="profileName">Miner</b><small id="profileId">Telegram</small></div></div>
+      <div class="stats-card">
+        <div><span>Total earned</span><b id="totalEarned">0.0000 PERS</b></div>
+        <div><span>Referral earned</span><b id="profileRef">0 PERS</b></div>
+        <div><span>Mining speed</span><b id="profileSpeed">1.00 PERS/h</b></div>
+        <div><span>Wallet PERS</span><b id="profileWallet">0.0000 PERS</b></div>
+      </div>
+      <div class="profile-links"><button id="leaderboardBtn">🏆 LEADERBOARD</button></div>
+      <div class="security-note"><b>SECURE MODE</b><span>Mining and claims are calculated server-side. Withdrawals are queued for manual payout until the payout wallet and LP are verified.</span></div>
+    </section>
+
+    <section class="screen" id="screen-leaderboard">
+      <div class="section-head"><h2>LEADERBOARD</h2><span>GLOBAL</span></div>
+      <div class="leaderboard" id="leaderboardList"><div class="loading">LOADING LEADERBOARD…</div></div>
     </section>
   </main>
 
   <nav>
-    <button class="nav active" data-tab="mine"><span>⛏</span><b>Mine</b></button>
-    <button class="nav" data-tab="tasks"><span>📝</span><b>Tasks</b></button>
-    <button class="nav" data-tab="miners"><span>⚡</span><b>Miners</b></button>
-    <button class="nav" data-tab="friends"><span>👥</span><b>Friends</b></button>
-    <button class="nav" data-tab="profile"><span>👤</span><b>Profile</b></button>
+    <button class="nav active" data-screen="home"><span>⌂</span><b>Home</b></button>
+    <button class="nav" data-screen="tasks"><span>✓</span><b>Tasks</b></button>
+    <button class="nav" data-screen="upgrade"><span>⚡</span><b>Upgrade</b></button>
+    <button class="nav" data-screen="friends"><span>♙</span><b>Friends</b></button>
+    <button class="nav" data-screen="wallet"><span>◈</span><b>Wallet</b></button>
   </nav>
 </div>
+
+<div class="modal" id="withdrawModal">
+  <div class="modal-card">
+    <h3>WITHDRAW PERS</h3><p>Send a payout request to the PERSEPOLIS treasury.</p>
+    <div class="modal-row"><span>Available</span><b id="withdrawAvailable">0 PERS</b></div>
+    <input id="withdrawAmount" type="number" min="10" step="0.0001" placeholder="Amount PERS">
+    <div class="modal-actions"><button id="withdrawCancel">CANCEL</button><button class="danger" id="withdrawConfirm">REQUEST</button></div>
+  </div>
+</div>
+
 <script src="app.js"></script>
 </body>
 </html>
