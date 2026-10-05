@@ -1,9 +1,22 @@
-# PERSEPOLIS — Exact Reference React
+# PERSEPOLIS — 10 Screen Real Game
 
-این نسخه عمداً ظاهر را از تصویر مرجع بریده و همان ۱۰ صفحه را نمایش می‌دهد تا اختلاف طراحی با مرجع از بین برود.
+این نسخه همان ۱۰ صفحه مرجع را به یک بازی React واقعی تبدیل می‌کند.
 
-صفحات:
-Welcome / Home / Level / Wallet / Buy PERS / Mining / Daily Tasks / Invite Friends / Leaderboard / Profile
+## اجرا
+npm install
+npm run dev
 
-Hotspotهای شفاف برای جابه‌جایی بین صفحات اضافه شده‌اند.
-مرحله بعدی: جایگزینی هر تصویر با کامپوننت واقعی React بدون تغییر ظاهر مرجع و سپس اتصال Backend/TON.
+## امکانات واقعی داخل Frontend
+- 10 صفحه و navigation
+- Level 1 تا 400 با فرمول واحد
+- Mining با نرخ واقعی بر اساس Level
+- Energy
+- Balance
+- Upgrade با کسر PERS از موجودی کاربر
+- Tasks و reward
+- Referral link
+- Wallet binding field
+- Telegram WebApp آماده
+
+## نکته
+برای موجودی on-chain و Buy/Sell واقعی باید backend و مسیر تأییدشده PERS/TON وصل شود. این نسخه قیمت یا تراکنش جعلی ایجاد نمی‌کند.
