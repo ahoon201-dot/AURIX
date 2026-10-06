@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05070b">
+<title>PERSEPOLIS</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;min-height:100%;background:#05070b;color:#f7f1df;font-family:Arial,sans-serif}
+body{touch-action:manipulation}.app{min-height:100vh;padding-bottom:78px;background:radial-gradient(circle at 50% 18%,rgba(111,42,13,.45),transparent 36%),linear-gradient(180deg,#17100c,#080b10 55%,#030509)}
+.wrap{width:min(100%,520px);margin:auto;padding:14px 16px}.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.brand{font-weight:900;font-size:21px;letter-spacing:2px;color:#ffd34f}.lv{border:1px solid #87651e;border-radius:24px;padding:10px 15px}
+.card{border:1px solid #2c3034;border-radius:22px;background:rgba(12,15,20,.92);padding:18px;margin-bottom:14px;box-shadow:0 12px 35px rgba(0,0,0,.25)}
+.center{text-align:center}.eyebrow{font-size:12px;letter-spacing:2px;color:#929ba5}.balance{font-size:38px;font-weight:900;color:#ffd34f;margin:9px}.muted{font-size:13px;color:#929ba5}.rate{margin:12px 0}.row{display:flex;justify-content:space-between;gap:10px}.bar{height:9px;background:#20262d;border-radius:9px;overflow:hidden;margin-top:7px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#ff5a3d,#ffd34f)}button{font:inherit}.mainbtn{width:100%;border:0;border-radius:16px;padding:15px;margin-top:16px;background:#c32616;color:#fff;font-weight:900}.mainbtn.on{background:#167746}.status{text-align:center;min-height:18px;margin-top:9px;color:#929ba5;font-size:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}.lvl{background:#0d1218;border:1px solid #2b3035;border-radius:15px;padding:12px}.lvl b{color:#ffd34f}.lvl button{width:100%;margin-top:9px;padding:8px;border-radius:10px;background:#17130e;color:#ffd34f;border:1px solid #8c6c27}.lvl button:disabled{opacity:.55}.wallet{word-break:break-all;font-size:12px;margin-top:8px}.nav{position:fixed;z-index:10;left:0;right:0;bottom:0;height:72px;background:rgba(5,8,12,.97);border-top:1px solid #242b32}.navin{height:100%;width:min(100%,520px);margin:auto;display:grid;grid-template-columns:repeat(4,1fr)}.nav button{background:none;border:0;color:#8b949e;font-size:11px}.nav button.active{color:#ffd34f}.nav span{display:block;font-size:21px;margin-bottom:3px}
+</style>
+</head>
+<body>
+<div class="app"><div class="wrap">
+<div class="head"><div class="brand">𓂀 PERSEPOLIS</div><div class="lv" id="lv">LEVEL 1</div></div>
+<section class="card center">
+<div class="eyebrow">SAVED TOKENS</div><div class="balance" id="bal">0.00</div><div class="muted">PERS</div>
+<div class="rate" id="rate">+0.01 PERS / HOUR</div>
+<div class="row"><span class="muted">Energy</span><span id="energy">200 / 200</span></div>
+<div class="bar"><i id="energyBar" style="width:100%"></i></div>
+<button class="mainbtn" id="mine">START MINING</button><div class="status" id="status">Connecting…</div>
+</section>
+<section class="card"><div class="row"><b>40 LEVELS</b><b id="count">1 / 40</b></div><div class="muted" style="margin-top:7px">Spend PERS to increase mining speed.</div><div class="grid" id="levels"></div></section>
+<section class="card"><b>TON WALLET</b><div class="wallet" id="wallet">Not connected</div><button class="mainbtn" style="background:#151b22;border:1px solid #4a5560" id="connect">CONNECT WALLET</button></section>
+</div></div>
+<nav class="nav"><div class="navin">
+<button class="active"><span>⌂</span>Home</button>
+<button onclick="alert('Tasks will be enabled after the core game is stable.')"><span>✓</span>Tasks</button>
+<button onclick="document.getElementById('levels').scrollIntoView({behavior:'smooth'})"><span>↗</span>Upgrade</button>
+<button onclick="alert('Referral is linked to your Telegram account.')"><span>♟</span>Friends</button>
+</div></nav>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+(()=>{const tg=window.Telegram?.WebApp;try{tg?.ready();tg?.expand()}catch(e){}
+const $=id=>document.getElementById(id);let state={level:1,balance:0,energy:200,mining:false,wallet:''},levels=[];
+async function api(path,method='GET',body){const o={method,headers:{'X-Telegram-Init-Data':tg?.initData||''}};if(body){o.headers['content-type']='application/json';o.body=JSON.stringify(body)}const r=await fetch(path,o),d=await r.json().catch(()=>({}));if(!r.ok||d.ok===false)throw Error(d.error||('HTTP '+r.status));return d}
+function render(){ $('lv').textContent='LEVEL '+state.level;$('count').textContent=state.level+' / 40';$('bal').textContent=Number(state.balance||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});const cur=levels[state.level-1]||{speed:.01};$('rate').textContent='+'+cur.speed+' PERS / HOUR';const e=Math.max(0,Math.min(200,Number(state.energy||0)));$('energy').textContent=e+' / 200';$('energyBar').style.width=(e/2)+'%';$('mine').textContent=state.mining?'STOP MINING':'START MINING';$('mine').classList.toggle('on',!!state.mining);$('wallet').textContent=state.wallet||'Not connected';$('levels').innerHTML=levels.map((l,i)=>'<div class="lvl"><b>LEVEL '+l.level+'</b><div class="muted" style="margin-top:5px">Mining '+l.speed+'/h</div><div class="muted">Cost '+Number(l.cost||0).toLocaleString()+' PERS</div>'+(i===state.level?'<button onclick="upgrade()">UPGRADE</button>':'<button disabled>'+(i<state.level?'OWNED':'LOCKED')+'</button>')+'</div>').join('')}
+async function boot(){try{const d=await api('/api/bootstrap');state=d.state||state;levels=d.levels||[];$('status').textContent='Connected';render()}catch(e){$('status').textContent='Backend: '+e.message;render()}}
+$('mine').onclick=async()=>{try{const d=await api(state.mining?'/api/mine/stop':'/api/mine/start','POST',{});state=d.state||state;$('status').textContent=state.mining?'Mining started':'Mining stopped';render()}catch(e){$('status').textContent=e.message}};
+window.upgrade=async()=>{try{const d=await api('/api/level/upgrade','POST',{});state=d.state||state;$('status').textContent='Level upgraded';render()}catch(e){$('status').textContent=e.message}};
+$('connect').onclick=async()=>{const w=prompt('TON wallet address');if(!w)return;try{const d=await api('/api/wallet/bind','POST',{wallet:w.trim()});state=d.state||state;render();$('status').textContent='Wallet saved'}catch(e){$('status').textContent=e.message}};boot()})();
+</script>
+</body></html>

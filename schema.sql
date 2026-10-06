@@ -1,0 +1,29 @@
+CREATE TABLE IF NOT EXISTS users (
+ id INTEGER PRIMARY KEY,
+ username TEXT,
+ first_name TEXT,
+ balance REAL NOT NULL DEFAULT 0,
+ level INTEGER NOT NULL DEFAULT 1,
+ energy INTEGER NOT NULL DEFAULT 200,
+ mining INTEGER NOT NULL DEFAULT 0,
+ mining_started_at INTEGER,
+ wallet TEXT,
+ referred_by INTEGER,
+ referrals INTEGER NOT NULL DEFAULT 0,
+ created_at INTEGER NOT NULL,
+ updated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_users_balance ON users(balance);
+CREATE TABLE IF NOT EXISTS task_claims (
+ user_id INTEGER NOT NULL,
+ task_id TEXT NOT NULL,
+ claimed_at INTEGER NOT NULL,
+ PRIMARY KEY(user_id,task_id)
+);
+CREATE TABLE IF NOT EXISTS referrals (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ inviter_id INTEGER NOT NULL,
+ invitee_id INTEGER NOT NULL UNIQUE,
+ reward REAL NOT NULL DEFAULT 0,
+ created_at INTEGER NOT NULL
+);
